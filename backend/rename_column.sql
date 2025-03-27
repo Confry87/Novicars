@@ -1,0 +1,1 @@
+ALTER TABLE auto RENAME COLUMN marca TO fornitore; 
