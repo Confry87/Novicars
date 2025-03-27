@@ -3,9 +3,24 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Configurazione del database
+DATABASE_URL = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+
+# Configurazione JWT
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'chiave-segreta-di-sviluppo')
+JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 ora
+
+# Lista degli utenti autorizzati
+AUTHORIZED_USERS = {
+    'admin': 'admin123',
+    'user1': 'password1',
+    'user2': 'password2',
+    'user3': 'password3'
+}
+
 class Config:
     # Configurazione del database
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
+    SQLALCHEMY_DATABASE_URI = DATABASE_URL
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Configurazione CORS

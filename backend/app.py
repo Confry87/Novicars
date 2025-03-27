@@ -6,11 +6,15 @@ import os
 from datetime import datetime
 import pandas as pd
 from config import Config
+from auth import init_auth, jwt_required
 
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# Inizializza l'autenticazione
+init_auth(app)
 
 # Mapping delle colonne per gestire i diversi nomi possibili
 column_mapping = {
@@ -97,6 +101,12 @@ class ImportLog(db.Model):
             'success': self.success,
             'error_message': self.error_message
         }
+
+# Proteggi tutte le route con autenticazione
+@app.before_request
+def before_request():
+    if request.endpoint and 'login' not in request.endpoint and request.path.startswith('/api/'):
+        jwt_required()
 
 # Route per le auto
 @app.route('/api/auto', methods=['GET'])
