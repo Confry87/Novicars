@@ -1,1 +1,1 @@
-web: python -m gunicorn app:app 
+web: $VIRTUAL_ENV/bin/gunicorn app:app 
