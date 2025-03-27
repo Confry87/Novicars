@@ -11,7 +11,15 @@ from auth import init_auth, jwt_required
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+
+# Configurazione CORS per produzione
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["https://*.netlify.app", "http://localhost:3000"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Inizializza l'autenticazione
 init_auth(app)
