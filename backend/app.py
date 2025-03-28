@@ -372,6 +372,10 @@ def clear_database():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/health')
+def health_check():
+    return jsonify({"status": "ok", "message": "Backend is running"})
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
