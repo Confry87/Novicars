@@ -24,9 +24,10 @@ logger.info(f"Upload folder created at: {app.config['UPLOAD_FOLDER']}")
 # Configurazione CORS per produzione
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["https://*.netlify.app", "http://localhost:3000"],
+        "origins": ["https://*.netlify.app", "http://localhost:3000", "*"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
+        "supports_credentials": True
     }
 })
 
