@@ -7,10 +7,19 @@ from datetime import datetime
 import pandas as pd
 from config import Config
 from auth import init_auth, jwt_required
+import logging
+
+# Configurazione logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
+
+# Crea la cartella uploads se non esiste
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+logger.info(f"Upload folder created at: {app.config['UPLOAD_FOLDER']}")
 
 # Configurazione CORS per produzione
 CORS(app, resources={
@@ -378,7 +387,9 @@ def health_check():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    logger.info(f"Starting application on port {port}")
+    logger.info(f"Database URL: {app.config['SQLALCHEMY_DATABASE_URI']}")
     with app.app_context():
         db.create_all()
+        logger.info("Database tables created")
     app.run(host='0.0.0.0', port=port) 
