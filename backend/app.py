@@ -23,11 +23,12 @@ logger.info(f"Upload folder created at: {app.config['UPLOAD_FOLDER']}")
 
 # Configurazione CORS per produzione
 CORS(app, resources={
-    r"/api/*": {
+    r"/*": {
         "origins": ["https://*.netlify.app", "http://localhost:3000", "*"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
-        "supports_credentials": True
+        "supports_credentials": True,
+        "expose_headers": ["Content-Type", "Authorization"]
     }
 })
 
@@ -382,7 +383,7 @@ def clear_database():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/health')
+@app.route('/health')
 def health_check():
     return jsonify({"status": "ok", "message": "Backend is running"})
 
