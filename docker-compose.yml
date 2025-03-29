@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=novicars
+    ports:
+      - "5432:5432"
+    volumes:
+      - novicars-db:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    image: confry87/novicars-backend:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/novicars
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    volumes:
+      - novicars-uploads:/app/uploads
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  frontend:
+    image: confry87/novicars-frontend:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  novicars-db:
+  novicars-uploads: 
