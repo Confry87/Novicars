@@ -1,7 +1,7 @@
 [[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200 
+  status = 200
 
 [[headers]]
   for = "/*"
@@ -13,4 +13,9 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Access-Control-Allow-Origin = "https://*.netlify.app"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization" 
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+
+[build]
+  base = "frontend"
+  command = "npm install && npm run build"
+  publish = "dist" 
