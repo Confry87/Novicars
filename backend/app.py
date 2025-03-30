@@ -24,13 +24,21 @@ logger.info(f"Upload folder created at: {app.config['UPLOAD_FOLDER']}")
 # Configurazione CORS per produzione
 CORS(app, resources={
     r"/*": {
-        "origins": ["https://*.netlify.app", "http://localhost:3000", "*"],
+        "origins": ["https://novicars.netlify.app", "https://*.netlify.app", "http://localhost:3000", "http://localhost:5173"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
         "supports_credentials": True,
         "expose_headers": ["Content-Type", "Authorization"]
     }
 })
+
+# Per gestire il preflight OPTIONS
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'https://novicars.netlify.app')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # Inizializza l'autenticazione
 init_auth(app)
