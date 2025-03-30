@@ -9,6 +9,7 @@ import {
     CircularProgress,
 } from '@mui/material';
 import axios from 'axios';
+import { API_URL } from '../config';
 
 interface ApiResponse {
     message: string;
@@ -60,7 +61,7 @@ export const ExcelImport: React.FC = () => {
         }
 
         try {
-            const response = await axios.post<ApiResponse>('http://localhost:5000/api/import', formData, {
+            const response = await axios.post<ApiResponse>(`${API_URL}/import`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -87,7 +88,7 @@ export const ExcelImport: React.FC = () => {
         setMessage('');
 
         try {
-            const response = await axios.post<ApiResponse>('http://localhost:5000/api/clear-database');
+            const response = await axios.post<ApiResponse>(`${API_URL}/clear-database`);
             setMessage(response.data.message);
         } catch (err) {
             const error = err as ApiError;

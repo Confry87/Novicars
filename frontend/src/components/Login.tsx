@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 
 interface LoginResponse {
     access_token: string;
@@ -26,7 +27,7 @@ export const Login: React.FC = () => {
         setError('');
 
         try {
-            const response = await axios.post<LoginResponse>('http://localhost:5000/api/login', {
+            const response = await axios.post<LoginResponse>(`${API_URL}/login`, {
                 username,
                 password,
             });
