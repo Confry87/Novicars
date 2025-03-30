@@ -1,21 +1,40 @@
 import axios from 'axios';
 import { Auto, SearchFilters, ImportLog } from '../types';
-import { API_URL } from '../config';
+import { getApiUrl } from '../config';
 
-const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
+// Configura l'interceptor per il token
+axios.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
     },
-    timeout: 10000, // 10 secondi di timeout
-});
-
-// Interceptor per gestire gli errori
-api.interceptors.response.use(
-    response => response,
     (error) => {
-        if (error.code === 'ERR_NETWORK') {
-            console.error('Errore di rete: Impossibile connettersi al server. Assicurati che il backend sia in esecuzione.');
+        return Promise.reject(error);
+    }
+);
+
+// Configura un timeout di 10 secondi per le richieste
+axios.defaults.timeout = 10000;
+
+// Configura l'interceptor per gestire gli errori
+axios.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        if (error.response) {
+            // La richiesta è stata effettuata e il server ha risposto con un codice di stato
+            // che non rientra nell'intervallo 2xx
+            console.error('Errore dal server:', error.response.data);
+        } else if (error.request) {
+            // La richiesta è stata effettuata ma non è stata ricevuta alcuna risposta
+            console.error('Nessuna risposta dal server:', error.request);
+        } else {
+            // Si è verificato un errore durante la configurazione della richiesta
+            console.error('Errore configurazione richiesta:', error.message);
         }
         return Promise.reject(error);
     }
@@ -25,7 +44,7 @@ export const autoService = {
     // Ottieni tutte le auto con filtri opzionali
     getAutos: async (filters?: SearchFilters): Promise<Auto[]> => {
         try {
-            const response = await api.get<Auto[]>('/auto', { params: filters });
+            const response = await axios.get(getApiUrl('auto'), { params: filters });
             return response.data;
         } catch (error) {
             console.error('Errore nel recupero delle auto:', error);
@@ -36,7 +55,7 @@ export const autoService = {
     // Ottieni una singola auto per ID
     getAutoById: async (id: number): Promise<Auto> => {
         try {
-            const response = await api.get<Auto>(`/auto/${id}`);
+            const response = await axios.get(getApiUrl(`auto/${id}`));
             return response.data;
         } catch (error) {
             console.error(`Errore nel recupero dell'auto con ID ${id}:`, error);
@@ -49,14 +68,14 @@ export const autoService = {
         try {
             const formData = new FormData();
             formData.append('file', file);
-            const response = await api.post<ImportLog>('/import', formData, {
+            const response = await axios.post(getApiUrl('import'), formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
             return response.data;
         } catch (error) {
-            console.error('Errore nell\'importazione del file:', error);
+            console.error('Errore durante l\'importazione del file Excel:', error);
             throw error;
         }
     },
@@ -64,7 +83,7 @@ export const autoService = {
     // Ottieni i log di importazione
     getImportLogs: async (): Promise<ImportLog[]> => {
         try {
-            const response = await api.get<ImportLog[]>('/import/logs');
+            const response = await axios.get(getApiUrl('import/logs'));
             return response.data;
         } catch (error) {
             console.error('Errore nel recupero dei log di importazione:', error);

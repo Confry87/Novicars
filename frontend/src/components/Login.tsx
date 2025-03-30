@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { API_URL } from '../config';
+import { getApiUrl } from '../config';
 
 interface LoginResponse {
     access_token: string;
@@ -20,14 +20,17 @@ export const Login: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
 
         try {
-            const response = await axios.post<LoginResponse>(`${API_URL}/login`, {
+            console.log(`Connecting to: ${getApiUrl('login')}`);
+            const response = await axios.post<LoginResponse>(getApiUrl('login'), {
                 username,
                 password,
             });
@@ -38,8 +41,17 @@ export const Login: React.FC = () => {
 
             // Reindirizza alla home
             navigate('/');
-        } catch (err) {
-            setError('Credenziali non valide');
+        } catch (err: any) {
+            console.error('Login error:', err);
+            if (err.response) {
+                setError(err.response.data?.error || 'Errore durante il login');
+            } else if (err.request) {
+                setError('Impossibile connettersi al server. Verifica la tua connessione.');
+            } else {
+                setError('Errore durante la richiesta di login');
+            }
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -72,6 +84,7 @@ export const Login: React.FC = () => {
                         onChange={(e) => setUsername(e.target.value)}
                         margin="normal"
                         required
+                        disabled={loading}
                     />
                     <TextField
                         fullWidth
@@ -81,14 +94,16 @@ export const Login: React.FC = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         margin="normal"
                         required
+                        disabled={loading}
                     />
                     <Button
                         type="submit"
                         fullWidth
                         variant="contained"
                         sx={{ mt: 3 }}
+                        disabled={loading}
                     >
-                        Accedi
+                        {loading ? 'Login in corso...' : 'Accedi'}
                     </Button>
                 </Box>
             </Paper>
