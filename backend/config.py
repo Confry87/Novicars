@@ -24,7 +24,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Configurazione CORS
-    CORS_ORIGINS = ["http://localhost:3000"]
+    CORS_ORIGINS = ["http://localhost:3000", "https://novicars.netlify.app", "https://*.netlify.app"]
     
     # Configurazione upload file
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
