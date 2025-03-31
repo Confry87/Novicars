@@ -21,27 +21,16 @@ db = SQLAlchemy(app)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 logger.info(f"Upload folder created at: {app.config['UPLOAD_FOLDER']}")
 
-# Configurazione CORS base
-app.config['CORS_HEADERS'] = 'Content-Type,Authorization'
-
-# Per gestire il preflight OPTIONS
-@app.after_request
-def after_request(response):
-    origin = request.headers.get('Origin')
-    # Se la richiesta proviene da Netlify, permettila
-    if origin and ('netlify.app' in origin or origin == 'https://novicars.netlify.app'):
-        response.headers.add('Access-Control-Allow-Origin', origin)
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-    return response
-
-# Configurazione CORS per tutte le rotte
+# Configurazione CORS
 CORS(app, 
-    origins=["https://novicars.netlify.app", "https://*.netlify.app", "http://localhost:3000", "http://localhost:5173"],
-    supports_credentials=True,
-    allow_headers=["Content-Type", "Authorization"],
-    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+    resources={
+        r"/api/*": {
+            "origins": ["https://novicars.netlify.app", "https://*.netlify.app", "http://localhost:3000", "http://localhost:5173"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
+        }
+    })
 
 # Inizializza l'autenticazione
 init_auth(app)

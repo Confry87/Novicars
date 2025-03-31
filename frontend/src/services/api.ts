@@ -2,8 +2,17 @@ import axios from 'axios';
 import { Auto, SearchFilters, ImportLog } from '../types';
 import { getApiUrl } from '../config';
 
+const api = axios.create({
+    baseURL: getApiUrl(),
+    timeout: 10000,
+    withCredentials: true,
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
+
 // Configura l'interceptor per il token
-axios.interceptors.request.use(
+api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
         if (token) {
@@ -16,11 +25,8 @@ axios.interceptors.request.use(
     }
 );
 
-// Configura un timeout di 10 secondi per le richieste
-axios.defaults.timeout = 10000;
-
 // Configura l'interceptor per gestire gli errori
-axios.interceptors.response.use(
+api.interceptors.response.use(
     (response) => {
         return response;
     },
@@ -44,7 +50,7 @@ export const autoService = {
     // Ottieni tutte le auto con filtri opzionali
     getAutos: async (filters?: SearchFilters): Promise<Auto[]> => {
         try {
-            const response = await axios.get(getApiUrl('auto'), { params: filters });
+            const response = await api.get('auto', { params: filters });
             return response.data;
         } catch (error) {
             console.error('Errore nel recupero delle auto:', error);
@@ -55,7 +61,7 @@ export const autoService = {
     // Ottieni una singola auto per ID
     getAutoById: async (id: number): Promise<Auto> => {
         try {
-            const response = await axios.get(getApiUrl(`auto/${id}`));
+            const response = await api.get(`auto/${id}`);
             return response.data;
         } catch (error) {
             console.error(`Errore nel recupero dell'auto con ID ${id}:`, error);
@@ -68,7 +74,7 @@ export const autoService = {
         try {
             const formData = new FormData();
             formData.append('file', file);
-            const response = await axios.post(getApiUrl('import'), formData, {
+            const response = await api.post('import', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -83,7 +89,7 @@ export const autoService = {
     // Ottieni i log di importazione
     getImportLogs: async (): Promise<ImportLog[]> => {
         try {
-            const response = await axios.get(getApiUrl('import/logs'));
+            const response = await api.get('import/logs');
             return response.data;
         } catch (error) {
             console.error('Errore nel recupero dei log di importazione:', error);
