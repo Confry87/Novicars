@@ -42,6 +42,24 @@ CORS(app,
         }
     })
 
+# Gestione delle richieste OPTIONS
+@app.route('/api/login', methods=['OPTIONS'])
+def handle_login_options():
+    response = jsonify({"message": "OK"})
+    origin = request.headers.get('Origin')
+    logger.info(f"OPTIONS request for /api/login from origin: {origin}")
+    
+    if origin in ["https://novicars.netlify.app", "http://localhost:3000", "http://localhost:5173"] or "netlify.app" in origin:
+        response.headers.add('Access-Control-Allow-Origin', origin)
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Access-Control-Allow-Credentials')
+        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        logger.info(f"Added CORS headers for OPTIONS request from: {origin}")
+    else:
+        logger.warning(f"Origin not allowed for OPTIONS request: {origin}")
+    
+    return response
+
 # Middleware per gestire le richieste OPTIONS e CORS
 @app.after_request
 def after_request(response):
