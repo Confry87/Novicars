@@ -10,8 +10,17 @@ from auth import init_auth, jwt_required
 import logging
 
 # Configurazione logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
+
+# Log delle variabili d'ambiente
+logger.info("Environment variables:")
+logger.info(f"FLASK_ENV: {os.environ.get('FLASK_ENV', 'production')}")
+logger.info(f"PORT: {os.environ.get('PORT', '5000')}")
+logger.info(f"SQLALCHEMY_DATABASE_URI: {os.environ.get('SQLALCHEMY_DATABASE_URI', 'not set')}")
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -38,6 +47,9 @@ CORS(app,
 def after_request(response):
     origin = request.headers.get('Origin')
     logger.info(f"Request origin: {origin}")
+    logger.info(f"Request method: {request.method}")
+    logger.info(f"Request path: {request.path}")
+    logger.info(f"Request headers: {dict(request.headers)}")
     
     if origin in ["https://novicars.netlify.app", "http://localhost:3000", "http://localhost:5173"] or "netlify.app" in origin:
         response.headers.add('Access-Control-Allow-Origin', origin)
@@ -48,7 +60,15 @@ def after_request(response):
     else:
         logger.warning(f"Origin not allowed: {origin}")
     
+    logger.info(f"Response status: {response.status}")
+    logger.info(f"Response headers: {dict(response.headers)}")
     return response
+
+# Middleware per loggare tutte le richieste
+@app.before_request
+def log_request_info():
+    logger.info('Headers: %s', request.headers)
+    logger.info('Body: %s', request.get_data())
 
 # Inizializza l'autenticazione
 init_auth(app)
