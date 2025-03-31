@@ -29,16 +29,21 @@ export const Login: React.FC = () => {
         setLoading(true);
 
         try {
-            console.log(`Connecting to: ${getApiUrl('login')}`);
-            const response = await axios.post<LoginResponse>(getApiUrl('login'), {
+            const url = getApiUrl('login');
+            console.log(`Connecting to: ${url}`);
+            
+            const response = await axios.post<LoginResponse>(url, {
                 username,
                 password,
             }, {
                 withCredentials: true,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 }
             });
+
+            console.log('Login response:', response.data);
 
             // Salva il token nel localStorage
             localStorage.setItem('token', response.data.access_token);
@@ -49,10 +54,16 @@ export const Login: React.FC = () => {
         } catch (err: any) {
             console.error('Login error:', err);
             if (err.response) {
+                // Il server ha risposto con un errore
+                console.error('Server response:', err.response.data);
                 setError(err.response.data?.error || 'Errore durante il login');
             } else if (err.request) {
+                // La richiesta è stata fatta ma non è stata ricevuta risposta
+                console.error('No response received:', err.request);
                 setError('Impossibile connettersi al server. Verifica la tua connessione.');
             } else {
+                // Errore nella configurazione della richiesta
+                console.error('Request error:', err.message);
                 setError('Errore durante la richiesta di login');
             }
         } finally {
