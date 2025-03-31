@@ -3,7 +3,7 @@ import { Auto, SearchFilters, ImportLog } from '../types';
 import { getApiUrl } from '../config';
 
 const api = axios.create({
-    baseURL: getApiUrl(),
+    baseURL: getApiUrl(''),
     timeout: 10000,
     withCredentials: true,
     headers: {
