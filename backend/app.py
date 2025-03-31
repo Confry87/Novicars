@@ -34,7 +34,7 @@ logger.info(f"Upload folder created at: {app.config['UPLOAD_FOLDER']}")
 CORS(app, 
     resources={
         r"/*": {
-            "origins": "*",  # Accetta tutte le origini
+            "origins": ["https://novicars.netlify.app", "https://*.netlify.app", "http://localhost:3000", "http://localhost:5173"],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
             "supports_credentials": True,
@@ -51,15 +51,21 @@ def after_request(response):
     logger.info(f"Request path: {request.path}")
     logger.info(f"Request headers: {dict(request.headers)}")
     
-    # Accetta tutte le origini
-    if origin:
+    # Rimuovi eventuali header CORS esistenti
+    response.headers.pop('Access-Control-Allow-Origin', None)
+    response.headers.pop('Access-Control-Allow-Headers', None)
+    response.headers.pop('Access-Control-Allow-Methods', None)
+    response.headers.pop('Access-Control-Allow-Credentials', None)
+    
+    # Aggiungi gli header CORS corretti
+    if origin in ["https://novicars.netlify.app", "http://localhost:3000", "http://localhost:5173"] or "netlify.app" in origin:
         response.headers.add('Access-Control-Allow-Origin', origin)
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Access-Control-Allow-Credentials')
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         response.headers.add('Access-Control-Allow-Credentials', 'true')
         logger.info(f"Added CORS headers for origin: {origin}")
     else:
-        logger.warning("No origin header found")
+        logger.warning(f"Origin not allowed: {origin}")
     
     logger.info(f"Response status: {response.status}")
     logger.info(f"Response headers: {dict(response.headers)}")
