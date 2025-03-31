@@ -7,9 +7,9 @@ import {
     Paper,
     Alert,
 } from '@mui/material';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { getApiUrl } from '../config';
+import axios from 'axios';
 
 interface LoginResponse {
     access_token: string;
@@ -33,6 +33,11 @@ export const Login: React.FC = () => {
             const response = await axios.post<LoginResponse>(getApiUrl('login'), {
                 username,
                 password,
+            }, {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
             // Salva il token nel localStorage

@@ -7,4 +7,7 @@ export const getApiUrl = (endpoint: string) => {
     : `${API_URL}/api`;
   
   return `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-}; 
+};
+
+// Log dell'URL del backend per debug
+console.log('Backend URL:', API_URL); 
