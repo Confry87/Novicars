@@ -10,17 +10,8 @@ from auth import init_auth, jwt_required
 import logging
 
 # Configurazione logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Log delle variabili d'ambiente
-logger.info("Environment variables:")
-logger.info(f"FLASK_ENV: {os.environ.get('FLASK_ENV', 'production')}")
-logger.info(f"PORT: {os.environ.get('PORT', '5000')}")
-logger.info(f"SQLALCHEMY_DATABASE_URI: {os.environ.get('SQLALCHEMY_DATABASE_URI', 'not set')}")
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -42,40 +33,12 @@ CORS(app,
         }
     })
 
-# Gestione delle richieste OPTIONS
-@app.route('/api/login', methods=['OPTIONS'])
-def handle_login_options():
-    response = jsonify({"message": "OK"})
-    origin = request.headers.get('Origin')
-    logger.info(f"OPTIONS request for /api/login from origin: {origin}")
-    
-    if origin in ["https://novicars.netlify.app", "http://localhost:3000", "http://localhost:5173"] or "netlify.app" in origin:
-        response.headers.add('Access-Control-Allow-Origin', origin)
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Access-Control-Allow-Credentials')
-        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-        logger.info(f"Added CORS headers for OPTIONS request from: {origin}")
-    else:
-        logger.warning(f"Origin not allowed for OPTIONS request: {origin}")
-    
-    return response
-
 # Middleware per gestire le richieste OPTIONS e CORS
 @app.after_request
 def after_request(response):
     origin = request.headers.get('Origin')
     logger.info(f"Request origin: {origin}")
-    logger.info(f"Request method: {request.method}")
-    logger.info(f"Request path: {request.path}")
-    logger.info(f"Request headers: {dict(request.headers)}")
     
-    # Rimuovi eventuali header CORS esistenti
-    response.headers.pop('Access-Control-Allow-Origin', None)
-    response.headers.pop('Access-Control-Allow-Headers', None)
-    response.headers.pop('Access-Control-Allow-Methods', None)
-    response.headers.pop('Access-Control-Allow-Credentials', None)
-    
-    # Aggiungi gli header CORS corretti
     if origin in ["https://novicars.netlify.app", "http://localhost:3000", "http://localhost:5173"] or "netlify.app" in origin:
         response.headers.add('Access-Control-Allow-Origin', origin)
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Access-Control-Allow-Credentials')
@@ -85,15 +48,7 @@ def after_request(response):
     else:
         logger.warning(f"Origin not allowed: {origin}")
     
-    logger.info(f"Response status: {response.status}")
-    logger.info(f"Response headers: {dict(response.headers)}")
     return response
-
-# Middleware per loggare tutte le richieste
-@app.before_request
-def log_request_info():
-    logger.info('Headers: %s', request.headers)
-    logger.info('Body: %s', request.get_data())
 
 # Inizializza l'autenticazione
 init_auth(app)

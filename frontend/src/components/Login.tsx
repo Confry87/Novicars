@@ -1,22 +1,8 @@
 import React, { useState } from 'react';
-import {
-    Box,
-    Button,
-    TextField,
-    Typography,
-    Paper,
-    Alert,
-} from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { getApiUrl } from '../config';
-import axios from 'axios';
+import { apiService } from '../services/api';
 
-interface LoginResponse {
-    access_token: string;
-    username: string;
-}
-
-export const Login: React.FC = () => {
+const Login: React.FC = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -29,100 +15,80 @@ export const Login: React.FC = () => {
         setLoading(true);
 
         try {
-            const url = getApiUrl('login');
-            console.log(`Connecting to: ${url}`);
-            
-            const response = await axios.post<LoginResponse>(url, {
-                username,
-                password,
-            }, {
-                withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            });
-
-            console.log('Login response:', response.data);
-
-            // Salva il token nel localStorage
-            localStorage.setItem('token', response.data.access_token);
-            localStorage.setItem('username', response.data.username);
-
-            // Reindirizza alla home
-            navigate('/');
-        } catch (err: any) {
-            console.error('Login error:', err);
-            if (err.response) {
-                // Il server ha risposto con un errore
-                console.error('Server response:', err.response.data);
-                setError(err.response.data?.error || 'Errore durante il login');
-            } else if (err.request) {
-                // La richiesta è stata fatta ma non è stata ricevuta risposta
-                console.error('No response received:', err.request);
-                setError('Impossibile connettersi al server. Verifica la tua connessione.');
-            } else {
-                // Errore nella configurazione della richiesta
-                console.error('Request error:', err.message);
-                setError('Errore durante la richiesta di login');
+            const response = await apiService.login(username, password);
+            if (response.token) {
+                localStorage.setItem('token', response.token);
+                navigate('/dashboard');
             }
+        } catch (error) {
+            console.error('Login error:', error);
+            setError('Credenziali non valide');
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <Box
-            sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '100vh',
-                bgcolor: 'background.default',
-            }}
-        >
-            <Paper elevation={3} sx={{ p: 4, maxWidth: 400, width: '100%' }}>
-                <Typography variant="h5" component="h1" gutterBottom>
-                    Login
-                </Typography>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8">
+                <div>
+                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        Accedi al tuo account
+                    </h2>
+                </div>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                    <div className="rounded-md shadow-sm -space-y-px">
+                        <div>
+                            <label htmlFor="username" className="sr-only">
+                                Username
+                            </label>
+                            <input
+                                id="username"
+                                name="username"
+                                type="text"
+                                required
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                disabled={loading}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="password" className="sr-only">
+                                Password
+                            </label>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                disabled={loading}
+                            />
+                        </div>
+                    </div>
 
-                {error && (
-                    <Alert severity="error" sx={{ mb: 2 }}>
-                        {error}
-                    </Alert>
-                )}
+                    {error && (
+                        <div className="text-red-500 text-sm text-center">{error}</div>
+                    )}
 
-                <Box component="form" onSubmit={handleSubmit}>
-                    <TextField
-                        fullWidth
-                        label="Username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        margin="normal"
-                        required
-                        disabled={loading}
-                    />
-                    <TextField
-                        fullWidth
-                        label="Password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        margin="normal"
-                        required
-                        disabled={loading}
-                    />
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        sx={{ mt: 3 }}
-                        disabled={loading}
-                    >
-                        {loading ? 'Login in corso...' : 'Accedi'}
-                    </Button>
-                </Box>
-            </Paper>
-        </Box>
+                    <div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                        >
+                            {loading ? 'Login in corso...' : 'Accedi'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     );
-}; 
+};
+
+export default Login; 

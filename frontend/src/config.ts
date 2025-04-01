@@ -1,13 +1,23 @@
-export const API_URL = import.meta.env.VITE_API_URL || 'https://novicars-backend.railway.app';
-
-// Verifica se l'URL ha già il percorso /api
-export const getApiUrl = (endpoint: string) => {
-  const baseUrl = API_URL.endsWith('/api') 
-    ? API_URL 
-    : `${API_URL}/api`;
+// Configurazione dell'API
+export const getApiUrl = () => {
+  // In sviluppo, usa l'URL locale
+  if (import.meta.env.DEV) {
+    return 'http://localhost:5000';
+  }
   
-  return `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  // In produzione, usa il proxy Netlify
+  return '';
+};
+
+// Configurazione di Axios
+export const axiosConfig = {
+  baseURL: getApiUrl(),
+  withCredentials: true,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 };
 
 // Log dell'URL del backend per debug
-console.log('Backend URL:', API_URL); 
+console.log('Backend URL:', getApiUrl()); 
