@@ -1,53 +1,45 @@
 services:
+  # Backend service
   - type: web
     name: novicars-backend
     env: python
-    buildCommand: cd backend && pip install -r requirements.txt
-    startCommand: cd backend && gunicorn app:app --workers=1 --threads=2 --bind=0.0.0.0:$PORT
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && gunicorn app:app
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.0
+        value: 3.8.0
+      - key: JWT_SECRET_KEY
+        generateValue: true
       - key: DATABASE_URL
         fromDatabase:
           name: novicars-db
           property: connectionString
-      - key: JWT_SECRET_KEY
-        generateValue: true
       - key: FLASK_ENV
         value: production
-      - key: DB_HOST
-        fromDatabase:
-          name: novicars-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: novicars-db
-          property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: novicars-db
-          property: database
-      - key: DB_USER
-        fromDatabase:
-          name: novicars-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: novicars-db
-          property: password
-    plan: free
+      - key: UPLOAD_FOLDER
+        value: /tmp/uploads
 
+  # Frontend service
   - type: web
     name: novicars-frontend
     env: static
     buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/dist
+    staticPublishPath: ./frontend/dist
     envVars:
       - key: VITE_API_URL
-        value: https://novicars-backend.onrender.com
+        value: https://novicars-backend.onrender.com/api
 
 databases:
   - name: novicars-db
     databaseName: novicars
     user: novicars
-    plan: free 
+    plan: free
+
+# Configurazione globale
+envVarGroups:
+  - name: novicars-settings
+    envVars:
+      - key: NODE_VERSION
+        value: 18.0.0
+      - key: NPM_VERSION
+        value: 9.0.0 

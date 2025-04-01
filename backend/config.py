@@ -9,14 +9,10 @@ JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
 
 class Config:
     # Database configuration
-    DB_HOST = os.getenv('DB_HOST', 'localhost')
-    DB_PORT = os.getenv('DB_PORT', '5432')
-    DB_NAME = os.getenv('DB_NAME', 'novicars')
-    DB_USER = os.getenv('DB_USER', 'novicars')
-    DB_PASSWORD = os.getenv('DB_PASSWORD', '')
-    
-    # Construct database URL
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://novicars:novicars@localhost:5432/novicars')
+    # Fix per Render che usa postgres:// invece di postgresql://
+    if SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
+        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgres://", "postgresql://", 1)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # Lista degli utenti autorizzati
@@ -28,8 +24,16 @@ AUTHORIZED_USERS = {
 }
 
 # Configurazione CORS
-CORS_ORIGINS = ["http://localhost:3000", "https://novicars.netlify.app", "https://*.netlify.app"]
+CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://novicars-frontend.onrender.com",
+    "https://*.onrender.com"
+]
 
 # Configurazione upload file
-UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size 
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads'))
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
+
+# Crea la cartella uploads se non esiste
+os.makedirs(UPLOAD_FOLDER, exist_ok=True) 
