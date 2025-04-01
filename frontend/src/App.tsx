@@ -9,14 +9,22 @@ import {
     Box,
     CssBaseline,
     ThemeProvider,
+    createTheme,
 } from '@mui/material';
 import { AutoSearch } from './components/AutoSearch';
-import { ExcelImport } from './components/ExcelImport';
+import ExcelImport from './components/ExcelImport';
 import Login from './components/Login';
-import theme from './theme';
-import Layout from './components/Layout';
-import Dashboard from './components/Dashboard';
-import { useAuth } from './hooks/useAuth';
+
+const theme = createTheme({
+    palette: {
+        primary: {
+            main: '#1976d2',
+        },
+        secondary: {
+            main: '#dc004e',
+        },
+    },
+});
 
 // Componente per proteggere le route
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {

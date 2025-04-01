@@ -25,7 +25,7 @@ interface ApiError {
     };
 }
 
-export const ExcelImport: React.FC = () => {
+const ExcelImport: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [fornitoreForzato, setFornitoreForzato] = useState('');
     const [message, setMessage] = useState('');
@@ -162,4 +162,6 @@ export const ExcelImport: React.FC = () => {
             )}
         </Paper>
     );
-}; 
+};
+
+export default ExcelImport; 
