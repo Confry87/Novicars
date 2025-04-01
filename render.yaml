@@ -2,8 +2,8 @@ services:
   - type: web
     name: novicars-backend
     env: python
-    buildCommand: cd backend && pip install -r requirements.txt
-    startCommand: cd backend && gunicorn app:app --workers=1 --threads=2 --bind=0.0.0.0:$PORT
+    buildCommand: cd backend; pip install -r requirements.txt
+    startCommand: cd backend; gunicorn app:app --workers=1 --threads=2 --bind=0.0.0.0:$PORT
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
@@ -40,7 +40,7 @@ services:
   - type: web
     name: novicars-frontend
     env: static
-    buildCommand: cd frontend && npm install && npm run build
+    buildCommand: cd frontend; npm install; npm run build
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
