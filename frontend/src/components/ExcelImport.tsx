@@ -9,7 +9,8 @@ import {
     CircularProgress,
 } from '@mui/material';
 import axios from 'axios';
-import { API_URL } from '../config';
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface ApiResponse {
     message: string;
