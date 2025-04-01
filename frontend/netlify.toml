@@ -1,5 +1,6 @@
 [build]
   base = "frontend"
+  command = "npm ci --verbose && npm run build"
   publish = "dist"
   functions = "netlify/functions"
 
@@ -9,10 +10,6 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-[build.command]
-  - npm ci --verbose
-  - npm run build
 
 [[redirects]]
   from = "/api/*"
