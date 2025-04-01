@@ -15,6 +15,26 @@ services:
         generateValue: true
       - key: FLASK_ENV
         value: production
+      - key: DB_HOST
+        fromDatabase:
+          name: novicars-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: novicars-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: novicars-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: novicars-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: novicars-db
+          property: password
     plan: free
 
   - type: web
