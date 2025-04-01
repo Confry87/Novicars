@@ -1,8 +1,12 @@
 [build]
   base = "frontend"
-  command = "npm ci ; npm run build"
+  command = "npm ci --verbose"
   publish = "dist"
   functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
 
 [[redirects]]
   from = "/api/*"
