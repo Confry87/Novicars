@@ -1,131 +1,85 @@
-# Novicars - Gestione Auto
+# NoviCars
 
-Un'applicazione web per la gestione del parco auto, con funzionalità di importazione da Excel e ricerca avanzata.
+Applicazione web per la gestione del parco auto.
 
-## 🚀 Tecnologie Utilizzate
+## Tecnologie Utilizzate
 
-### Frontend
-- React
-- TypeScript
-- Material-UI
-- Axios
+- Frontend: React + Vite
+- Backend: Vercel Serverless Functions
+- Database: PostgreSQL (Vercel Postgres)
+- Autenticazione: JWT
 
-### Backend
-- Python
-- Flask
-- SQLAlchemy
-- PostgreSQL
+## Requisiti
 
-## 📋 Prerequisiti
+- Node.js >= 18
+- npm >= 9
+- PostgreSQL >= 14
 
-- Node.js (versione 16 o superiore)
-- Python (versione 3.8 o superiore)
-- PostgreSQL
+## Configurazione Locale
 
-## 🛠️ Installazione
-
-### Backend
-
-1. Navigare nella directory backend:
+1. Clona il repository:
 ```bash
-cd backend
+git clone https://github.com/yourusername/novicars.git
+cd novicars
 ```
 
-2. Creare un ambiente virtuale Python:
-```bash
-python -m venv venv
-```
-
-3. Attivare l'ambiente virtuale:
-- Windows:
-```bash
-.\venv\Scripts\activate
-```
-- Linux/Mac:
-```bash
-source venv/bin/activate
-```
-
-4. Installare le dipendenze:
-```bash
-pip install -r requirements.txt
-```
-
-5. Configurare le variabili d'ambiente:
-Creare un file `.env` nella root del progetto con le seguenti variabili:
-```env
-DATABASE_URL=postgresql://username:password@localhost:5432/novicars
-```
-
-### Frontend
-
-1. Navigare nella directory frontend:
-```bash
-cd frontend
-```
-
-2. Installare le dipendenze:
+2. Installa le dipendenze:
 ```bash
 npm install
 ```
 
-## 🚀 Avvio dell'applicazione
+3. Crea il file `.env` con le seguenti variabili:
+```env
+JWT_SECRET_KEY=your-secret-key-here
+POSTGRES_URL=postgresql://user:password@localhost:5432/novicars
+```
 
-### Backend
-
-1. Dalla directory backend:
+4. Inizializza il database:
 ```bash
-python app.py
+psql -U your_user -d novicars -f schema.sql
 ```
-Il server sarà disponibile su http://localhost:5000
 
-### Frontend
-
-1. Dalla directory frontend:
+5. Avvia l'applicazione in modalità sviluppo:
 ```bash
-npm start
-```
-L'applicazione sarà disponibile su http://localhost:3000
-
-## 📊 Funzionalità
-
-- **Importazione dati**: Supporto per l'importazione di file Excel con dati auto
-- **Ricerca avanzata**: Ricerca auto per fornitore e altri parametri
-- **Interfaccia moderna**: UI intuitiva realizzata con Material-UI
-- **API RESTful**: Backend con endpoints ben definiti per la gestione dei dati
-
-## 📁 Struttura del Progetto
-
-```
-novicars/
-├── backend/
-│   ├── app.py
-│   ├── config.py
-│   ├── import_data.py
-│   └── requirements.txt
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   └── App.tsx
-│   └── package.json
-├── uploads/
-└── README.md
+npm run dev
 ```
 
-## 🔒 Sicurezza
+## Deployment
 
-- I file sensibili (`.env`, file Excel, ecc.) sono esclusi dal repository
-- La directory `uploads` è utilizzata temporaneamente per i file importati
+L'applicazione è configurata per essere deployata su Vercel. Per deployare:
 
-## 🤝 Contribuire
+1. Crea un account su Vercel
+2. Connetti il repository GitHub
+3. Configura le variabili d'ambiente su Vercel:
+   - `JWT_SECRET_KEY`
+   - `POSTGRES_URL`
+4. Deploya l'applicazione
 
-1. Fai il fork del repository
-2. Crea un branch per la tua feature (`git checkout -b feature/AmazingFeature`)
-3. Committa i tuoi cambiamenti (`git commit -m 'Aggiunta una feature incredibile'`)
-4. Pusha sul branch (`git push origin feature/AmazingFeature`)
-5. Apri una Pull Request
+## API Endpoints
 
-## 📝 Note
+### Autenticazione
+- `POST /api/login` - Login utente
 
-- L'applicazione utilizza un server di sviluppo Flask. Per la produzione, si consiglia l'uso di un server WSGI come Gunicorn
-- Il frontend è configurato per lo sviluppo. Per la produzione, utilizzare `npm run build` 
+### Auto
+- `GET /api/auto` - Lista auto con filtri
+- `GET /api/auto/:id` - Dettaglio auto
+- `POST /api/import` - Importa auto da file Excel
+- `GET /api/import/logs` - Log importazioni
+- `POST /api/clear-database` - Pulisci database
+
+## Filtri Disponibili
+
+- `fornitore`: Filtra per fornitore
+- `modello`: Filtra per modello
+- `annoMin`: Anno minimo
+- `annoMax`: Anno massimo
+- `prezzoMin`: Prezzo minimo
+- `prezzoMax`: Prezzo massimo
+- `colore`: Filtra per colore
+- `targa`: Filtra per targa
+- `chilometraggioMin`: Chilometraggio minimo
+- `chilometraggioMax`: Chilometraggio massimo
+
+## Licenza
+
+MIT 

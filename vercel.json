@@ -7,15 +7,25 @@
       "config": {
         "distDir": "dist"
       }
+    },
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.ts"
+    },
     {
       "src": "/(.*)",
       "dest": "frontend/dist/$1"
     }
   ],
   "env": {
-    "VITE_API_URL": "https://novicars.vercel.app/api"
+    "VITE_API_URL": "https://novicars.vercel.app/api",
+    "JWT_SECRET_KEY": "@jwt_secret_key",
+    "POSTGRES_URL": "@postgres_url"
   }
 } 
