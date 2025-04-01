@@ -3,7 +3,7 @@ services:
     name: novicars-backend
     env: python
     buildCommand: cd backend && pip install -r requirements.txt
-    startCommand: cd backend && gunicorn app:app
+    startCommand: cd backend && gunicorn app:app --workers 1 --threads 2
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
@@ -15,6 +15,11 @@ services:
         generateValue: true
       - key: FLASK_ENV
         value: production
+    plan: free
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
 
   - type: web
     name: novicars-frontend
@@ -24,8 +29,10 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://novicars-backend.onrender.com
+    plan: free
 
 databases:
   - name: novicars-db
     databaseName: novicars
-    user: novicars 
+    user: novicars
+    plan: free 
