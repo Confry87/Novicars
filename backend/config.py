@@ -3,6 +3,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# JWT configuration
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-secret-key')
+JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
+
 class Config:
     # Database configuration
     DB_HOST = os.getenv('DB_HOST', 'localhost')
@@ -14,10 +18,6 @@ class Config:
     # Construct database URL
     SQLALCHEMY_DATABASE_URI = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
-    # JWT configuration
-    JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-secret-key')
-    JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
 
 # Lista degli utenti autorizzati
 AUTHORIZED_USERS = {
