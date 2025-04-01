@@ -1,6 +1,6 @@
 [build]
   base = "frontend"
-  command = "npm ci --verbose && npm run build"
+  command = "npm ci --verbose"
   publish = "dist"
   functions = "netlify/functions"
 
