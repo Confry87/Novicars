@@ -5,8 +5,8 @@ export const getApiUrl = () => {
     return 'http://localhost:5000';
   }
   
-  // In produzione, usa il proxy Netlify
-  return '';
+  // In produzione, usa l'URL di Render
+  return 'https://novicars-backend.onrender.com';
 };
 
 // Configurazione di Axios
