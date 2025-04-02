@@ -6,6 +6,7 @@ export interface Auto {
     chilometraggio: number;
     colore: string;
     prezzo: number;
+    targa: string;
     data_importazione: string;
 }
 

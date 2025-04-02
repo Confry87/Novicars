@@ -25,11 +25,11 @@ interface ApiError {
 
 export const ExcelImport: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
-    const [fornitoreForzato, setFornitoreForzato] = useState('');
-    const [message, setMessage] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [clearing, setClearing] = useState(false);
+    const [fornitoreForzato, setFornitoreForzato] = useState<string>('');
+    const [message, setMessage] = useState<string>('');
+    const [error, setError] = useState<string>('');
+    const [loading, setLoading] = useState<boolean>(false);
+    const [clearing, setClearing] = useState<boolean>(false);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -54,8 +54,8 @@ export const ExcelImport: React.FC = () => {
         setMessage('');
 
         try {
-            const response = await apiService.importExcel(file, fornitoreForzato);
-            setMessage(response.message);
+            const response = await apiService.importExcel(file, fornitoreForzato || undefined);
+            setMessage(response.message || 'Importazione completata con successo');
             setFile(null);
             setFornitoreForzato('');
         } catch (err) {
@@ -77,7 +77,7 @@ export const ExcelImport: React.FC = () => {
 
         try {
             const response = await apiService.clearDatabase();
-            setMessage(response.message);
+            setMessage(response.message || 'Database pulito con successo');
         } catch (err) {
             const error = err as ApiError;
             setError(error.response?.data?.error || 'Errore durante la pulizia del database');
