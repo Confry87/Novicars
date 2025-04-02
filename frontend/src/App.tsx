@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import { AutoSearch } from './components/AutoSearch';
 import { ExcelImport } from './components/ExcelImport';
-import Login from './components/Login';
+import { Login } from './components/Login';
 
 const theme = createTheme({
     palette: {
