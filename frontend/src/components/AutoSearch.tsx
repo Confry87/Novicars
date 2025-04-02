@@ -187,7 +187,7 @@ export const AutoSearch: React.FC = () => {
                                     <TableCell>€{auto.prezzo.toLocaleString()}</TableCell>
                                     <TableCell>{auto.colore}</TableCell>
                                     <TableCell>{auto.targa}</TableCell>
-                                    <TableCell>{auto.chilometraggio?.toLocaleString()}</TableCell>
+                                    <TableCell>{auto.chilometraggio.toLocaleString()}</TableCell>
                                     <TableCell>
                                         {new Date(auto.data_importazione).toLocaleString()}
                                     </TableCell>
