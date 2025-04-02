@@ -1,38 +1,15 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { Auto, SearchFilters, ImportLog } from '../types';
 import { getApiUrl, axiosConfig } from '../config';
 
-// Crea un'istanza di axios con la configurazione
-const api = axios.create(axiosConfig);
+const API_URL = 'https://novicars-backend.onrender.com/api';
 
-// Configura l'interceptor per il token
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+const api = axios.create({
+    baseURL: API_URL,
+    headers: {
+        'Content-Type': 'application/json',
     }
-);
-
-// Interceptor per gestire gli errori
-api.interceptors.response.use(
-    response => response,
-    error => {
-        if (error instanceof AxiosError) {
-            console.error('API Error:', {
-                status: error.response?.status,
-                data: error.response?.data,
-                headers: error.response?.headers
-            });
-        }
-        return Promise.reject(error);
-    }
-);
+});
 
 // Funzione per ottenere l'URL completo dell'endpoint
 const getEndpointUrl = (endpoint: string) => {
@@ -92,64 +69,32 @@ export const autoService = {
 };
 
 export const apiService = {
-    // Login
-    login: async (username: string, password: string) => {
-        try {
-            const response = await api.post(getEndpointUrl('/login'), { username, password });
-            return response.data;
-        } catch (error) {
-            console.error('Login error:', error);
-            throw error;
-        }
-    },
-
-    // Ottieni tutte le auto
-    getAutos: async () => {
-        try {
-            const response = await api.get(getEndpointUrl('/auto'));
-            return response.data;
-        } catch (error) {
-            console.error('Get autos error:', error);
-            throw error;
-        }
-    },
-
-    // Ottieni un'auto specifica
-    getAutoById: async (id: number) => {
-        try {
-            const response = await api.get(getEndpointUrl(`/auto/${id}`));
-            return response.data;
-        } catch (error) {
-            console.error('Get auto by id error:', error);
-            throw error;
-        }
+    // Ricerca auto
+    searchAutos: async (filters: any) => {
+        const response = await api.get('/auto', { params: filters });
+        return response.data;
     },
 
     // Importa file Excel
-    importExcel: async (file: File) => {
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            const response = await api.post(getEndpointUrl('/import'), formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Import excel error:', error);
-            throw error;
+    importExcel: async (file: File, fornitoreForzato?: string) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (fornitoreForzato) {
+            formData.append('fornitore_forzato', fornitoreForzato);
         }
+        const response = await api.post('/import', formData);
+        return response.data;
     },
 
-    // Ottieni i log di importazione
+    // Ottieni log importazioni
     getImportLogs: async () => {
-        try {
-            const response = await api.get(getEndpointUrl('/import/logs'));
-            return response.data;
-        } catch (error) {
-            console.error('Get import logs error:', error);
-            throw error;
-        }
+        const response = await api.get('/import/logs');
+        return response.data;
+    },
+
+    // Pulisci database
+    clearDatabase: async () => {
+        const response = await api.post('/clear-database');
+        return response.data;
     }
 }; 

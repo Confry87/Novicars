@@ -6,7 +6,6 @@ import os
 from datetime import datetime
 import pandas as pd
 from config import Config, UPLOAD_FOLDER, MAX_CONTENT_LENGTH, CORS_ORIGINS
-from auth import init_auth, jwt_required
 import logging
 
 # Configurazione logging
@@ -42,9 +41,6 @@ def after_request(response):
         logger.warning(f"Origin not allowed: {origin}")
     
     return response
-
-# Inizializza l'autenticazione
-init_auth(app)
 
 # Definizione del modello Auto
 class Auto(db.Model):
@@ -103,12 +99,6 @@ class ImportLog(db.Model):
             'success': self.success,
             'error_message': self.error_message
         }
-
-# Proteggi tutte le route con autenticazione
-@app.before_request
-def before_request():
-    if request.endpoint and 'login' not in request.endpoint and request.path.startswith('/api/'):
-        jwt_required()
 
 # Route per le auto
 @app.route('/api/auto', methods=['GET'])
