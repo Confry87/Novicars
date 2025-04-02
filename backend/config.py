@@ -17,10 +17,10 @@ class Config:
 
 # Lista degli utenti autorizzati
 AUTHORIZED_USERS = {
-    'admin': 'admin123',
-    'user1': 'password1',
-    'user2': 'password2',
-    'user3': 'password3'
+    'admin': 'NoviCars2024!',
+    'user1': 'NoviCars2024@1',
+    'user2': 'NoviCars2024@2',
+    'user3': 'NoviCars2024@3'
 }
 
 # Configurazione CORS
