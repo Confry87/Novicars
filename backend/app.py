@@ -22,7 +22,11 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 logger.info(f"Upload folder created at: {UPLOAD_FOLDER}")
 
 # Configurazione CORS
-CORS(app, origins=CORS_ORIGINS)
+CORS(app, 
+     origins=CORS_ORIGINS,
+     supports_credentials=True,
+     allow_headers=['Content-Type', 'Authorization'],
+     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
 # Middleware per gestire le richieste OPTIONS e CORS
 @app.after_request
@@ -30,9 +34,9 @@ def after_request(response):
     origin = request.headers.get('Origin')
     logger.info(f"Request origin: {origin}")
     
-    if origin in ["https://novicars.netlify.app", "http://localhost:3000", "http://localhost:5173"] or "netlify.app" in origin:
+    if origin in CORS_ORIGINS:
         response.headers.add('Access-Control-Allow-Origin', origin)
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Access-Control-Allow-Credentials')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         response.headers.add('Access-Control-Allow-Credentials', 'true')
         logger.info(f"Added CORS headers for origin: {origin}")
