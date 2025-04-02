@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     TextField,
     Button,
-    Grid,
+    Typography,
     Paper,
     Table,
     TableBody,
@@ -11,152 +11,192 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Typography,
     CircularProgress,
+    Alert,
 } from '@mui/material';
-import { Auto, SearchFilters } from '../types';
-import { autoService } from '../services/api';
+import { apiService } from '../services/api';
+import { Auto } from '../types';
 
 export const AutoSearch: React.FC = () => {
+    const [filters, setFilters] = useState({
+        fornitore: '',
+        modello: '',
+        annoMin: '',
+        annoMax: '',
+        prezzoMin: '',
+        prezzoMax: '',
+        colore: '',
+        targa: '',
+        chilometraggioMin: '',
+        chilometraggioMax: '',
+    });
     const [autos, setAutos] = useState<Auto[]>([]);
     const [loading, setLoading] = useState(false);
-    const [filters, setFilters] = useState<SearchFilters>({});
+    const [error, setError] = useState<string | null>(null);
 
     const handleSearch = async () => {
         setLoading(true);
+        setError(null);
         try {
-            const data = await autoService.getAutos(filters);
+            const data = await apiService.searchAutos(filters);
             setAutos(data);
-        } catch (error) {
-            console.error('Errore durante la ricerca:', error);
+        } catch (err) {
+            setError('Errore durante la ricerca delle auto');
+            console.error('Errore:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleFilterChange = (field: keyof SearchFilters, value: string | number) => {
-        setFilters(prev => ({
-            ...prev,
-            [field]: value,
-        }));
+    const handleReset = () => {
+        setFilters({
+            fornitore: '',
+            modello: '',
+            annoMin: '',
+            annoMax: '',
+            prezzoMin: '',
+            prezzoMax: '',
+            colore: '',
+            targa: '',
+            chilometraggioMin: '',
+            chilometraggioMax: '',
+        });
+        setAutos([]);
     };
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Typography variant="h4" gutterBottom>
-                Ricerca Auto
-            </Typography>
+        <Box>
+            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+                <Typography variant="h5" gutterBottom>
+                    Ricerca Auto
+                </Typography>
 
-            <Paper sx={{ p: 2, mb: 3 }}>
-                <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            label="Fornitore"
-                            value={filters.fornitore || ''}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('fornitore', e.target.value)}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            label="Modello"
-                            value={filters.modello || ''}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('modello', e.target.value)}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            label="Colore"
-                            value={filters.colore || ''}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('colore', e.target.value)}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Anno"
-                            value={filters.anno || ''}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('anno', parseInt(e.target.value))}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Prezzo Min"
-                            value={filters.prezzoMin || ''}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('prezzoMin', parseFloat(e.target.value))}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Prezzo Max"
-                            value={filters.prezzoMax || ''}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('prezzoMax', parseFloat(e.target.value))}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Chilometraggio Min"
-                            value={filters.chilometraggioMin || ''}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('chilometraggioMin', parseInt(e.target.value))}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            type="number"
-                            label="Chilometraggio Max"
-                            value={filters.chilometraggioMax || ''}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFilterChange('chilometraggioMax', parseInt(e.target.value))}
-                        />
-                    </Grid>
-                    <Grid item xs={12}>
-                        <Button
-                            variant="contained"
-                            onClick={handleSearch}
-                            disabled={loading}
-                            startIcon={loading ? <CircularProgress size={20} /> : null}
-                        >
-                            Cerca
-                        </Button>
-                    </Grid>
-                </Grid>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
+                    <TextField
+                        label="Fornitore"
+                        value={filters.fornitore}
+                        onChange={(e) => setFilters({ ...filters, fornitore: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Modello"
+                        value={filters.modello}
+                        onChange={(e) => setFilters({ ...filters, modello: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Anno Min"
+                        type="number"
+                        value={filters.annoMin}
+                        onChange={(e) => setFilters({ ...filters, annoMin: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Anno Max"
+                        type="number"
+                        value={filters.annoMax}
+                        onChange={(e) => setFilters({ ...filters, annoMax: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Prezzo Min"
+                        type="number"
+                        value={filters.prezzoMin}
+                        onChange={(e) => setFilters({ ...filters, prezzoMin: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Prezzo Max"
+                        type="number"
+                        value={filters.prezzoMax}
+                        onChange={(e) => setFilters({ ...filters, prezzoMax: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Colore"
+                        value={filters.colore}
+                        onChange={(e) => setFilters({ ...filters, colore: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Targa"
+                        value={filters.targa}
+                        onChange={(e) => setFilters({ ...filters, targa: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Chilometraggio Min"
+                        type="number"
+                        value={filters.chilometraggioMin}
+                        onChange={(e) => setFilters({ ...filters, chilometraggioMin: e.target.value })}
+                        fullWidth
+                    />
+                    <TextField
+                        label="Chilometraggio Max"
+                        type="number"
+                        value={filters.chilometraggioMax}
+                        onChange={(e) => setFilters({ ...filters, chilometraggioMax: e.target.value })}
+                        fullWidth
+                    />
+                </Box>
+
+                <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+                    <Button
+                        variant="contained"
+                        onClick={handleSearch}
+                        disabled={loading}
+                        startIcon={loading ? <CircularProgress size={20} /> : null}
+                    >
+                        {loading ? 'Ricerca in corso...' : 'Cerca'}
+                    </Button>
+                    <Button variant="outlined" onClick={handleReset}>
+                        Reset
+                    </Button>
+                </Box>
             </Paper>
 
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Fornitore</TableCell>
-                            <TableCell>Modello</TableCell>
-                            <TableCell>Anno</TableCell>
-                            <TableCell>Prezzo</TableCell>
-                            <TableCell>Colore</TableCell>
-                            <TableCell>Chilometraggio</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {autos.map((auto) => (
-                            <TableRow key={auto.id}>
-                                <TableCell>{auto.fornitore || '-'}</TableCell>
-                                <TableCell>{auto.modello || '-'}</TableCell>
-                                <TableCell>{auto.anno || '-'}</TableCell>
-                                <TableCell>€{auto.prezzo ? auto.prezzo.toLocaleString() : '-'}</TableCell>
-                                <TableCell>{auto.colore || '-'}</TableCell>
-                                <TableCell>{auto.chilometraggio ? `${auto.chilometraggio.toLocaleString()} km` : '-'}</TableCell>
+            {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
+            )}
+
+            {autos.length > 0 && (
+                <TableContainer component={Paper}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>ID</TableCell>
+                                <TableCell>Fornitore</TableCell>
+                                <TableCell>Modello</TableCell>
+                                <TableCell>Anno</TableCell>
+                                <TableCell>Prezzo</TableCell>
+                                <TableCell>Colore</TableCell>
+                                <TableCell>Targa</TableCell>
+                                <TableCell>Chilometraggio</TableCell>
+                                <TableCell>Data Importazione</TableCell>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                        </TableHead>
+                        <TableBody>
+                            {autos.map((auto) => (
+                                <TableRow key={auto.id}>
+                                    <TableCell>{auto.id}</TableCell>
+                                    <TableCell>{auto.fornitore}</TableCell>
+                                    <TableCell>{auto.modello}</TableCell>
+                                    <TableCell>{auto.anno}</TableCell>
+                                    <TableCell>€{auto.prezzo.toLocaleString()}</TableCell>
+                                    <TableCell>{auto.colore}</TableCell>
+                                    <TableCell>{auto.targa}</TableCell>
+                                    <TableCell>{auto.chilometraggio?.toLocaleString()}</TableCell>
+                                    <TableCell>
+                                        {new Date(auto.data_importazione).toLocaleString()}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
         </Box>
     );
 }; 

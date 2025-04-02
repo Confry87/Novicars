@@ -12,20 +12,22 @@ export interface Auto {
 export interface SearchFilters {
     fornitore?: string;
     modello?: string;
-    anno?: number;
-    prezzoMin?: number;
-    prezzoMax?: number;
+    annoMin?: string;
+    annoMax?: string;
+    prezzoMin?: string;
+    prezzoMax?: string;
     colore?: string;
-    chilometraggioMin?: number;
-    chilometraggioMax?: number;
+    targa?: string;
+    chilometraggioMin?: string;
+    chilometraggioMax?: string;
 }
 
 export interface ImportLog {
     id: number;
-    nome_file: string;
-    data_importazione: string;
-    numero_record: number;
-    record_aggiornati: number;
-    record_inseriti: number;
-    errori?: string;
+    file_name: string;
+    timestamp: string;
+    records_imported: number;
+    success: boolean;
+    error_message: string | null;
+    message?: string;
 } 
