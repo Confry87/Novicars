@@ -12,7 +12,6 @@ export const getApiUrl = () => {
 // Configurazione di Axios
 export const axiosConfig = {
   baseURL: getApiUrl(),
-  withCredentials: true,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'

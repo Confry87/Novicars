@@ -24,7 +24,6 @@ logger.info(f"Upload folder created at: {UPLOAD_FOLDER}")
 # Configurazione CORS
 CORS(app, 
      origins=CORS_ORIGINS,
-     supports_credentials=True,
      allow_headers=['Content-Type', 'Authorization'],
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
@@ -38,7 +37,6 @@ def after_request(response):
         response.headers.add('Access-Control-Allow-Origin', origin)
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
         logger.info(f"Added CORS headers for origin: {origin}")
     else:
         logger.warning(f"Origin not allowed: {origin}")
