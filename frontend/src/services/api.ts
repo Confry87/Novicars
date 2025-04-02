@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Auto, SearchFilters, ImportLog } from '../types';
 
-const API_URL = 'https://novicars-backend.onrender.com/api';
+const API_URL = 'https://novicars-backend.onrender.com';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -15,11 +15,11 @@ const getEndpointUrl = (endpoint: string) => {
     return `/api${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 };
 
-export const autoService = {
-    // Ottieni tutte le auto con filtri opzionali
-    getAutos: async (filters?: SearchFilters): Promise<Auto[]> => {
+export const apiService = {
+    // Ricerca auto
+    searchAutos: async (filters: SearchFilters): Promise<Auto[]> => {
         try {
-            const response = await api.get(getEndpointUrl('/auto'), { params: filters });
+            const response = await api.get('/api/auto', { params: filters });
             return response.data;
         } catch (error) {
             console.error('Errore nel recupero delle auto:', error);
@@ -30,7 +30,7 @@ export const autoService = {
     // Ottieni una singola auto per ID
     getAutoById: async (id: number): Promise<Auto> => {
         try {
-            const response = await api.get(getEndpointUrl(`/auto/${id}`));
+            const response = await api.get(`/api/auto/${id}`);
             return response.data;
         } catch (error) {
             console.error(`Errore nel recupero dell'auto con ID ${id}:`, error);
@@ -38,12 +38,15 @@ export const autoService = {
         }
     },
 
-    // Importa un file Excel
-    importExcel: async (file: File): Promise<ImportLog> => {
+    // Importa file Excel
+    importExcel: async (file: File, fornitoreForzato?: string): Promise<ImportLog> => {
         try {
             const formData = new FormData();
             formData.append('file', file);
-            const response = await api.post(getEndpointUrl('/import'), formData, {
+            if (fornitoreForzato) {
+                formData.append('fornitore_forzato', fornitoreForzato);
+            }
+            const response = await api.post('/api/import', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -55,45 +58,25 @@ export const autoService = {
         }
     },
 
-    // Ottieni i log di importazione
+    // Ottieni log importazioni
     getImportLogs: async (): Promise<ImportLog[]> => {
         try {
-            const response = await api.get(getEndpointUrl('/import/logs'));
+            const response = await api.get('/api/import/logs');
             return response.data;
         } catch (error) {
             console.error('Errore nel recupero dei log di importazione:', error);
             throw error;
         }
     },
-};
-
-export const apiService = {
-    // Ricerca auto
-    searchAutos: async (filters: any) => {
-        const response = await api.get('/auto', { params: filters });
-        return response.data;
-    },
-
-    // Importa file Excel
-    importExcel: async (file: File, fornitoreForzato?: string) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        if (fornitoreForzato) {
-            formData.append('fornitore_forzato', fornitoreForzato);
-        }
-        const response = await api.post('/import', formData);
-        return response.data;
-    },
-
-    // Ottieni log importazioni
-    getImportLogs: async () => {
-        const response = await api.get('/import/logs');
-        return response.data;
-    },
 
     // Pulisci database
     clearDatabase: async () => {
-        const response = await api.post('/clear-database');
-        return response.data;
+        try {
+            const response = await api.post('/api/clear-database');
+            return response.data;
+        } catch (error) {
+            console.error('Errore durante la pulizia del database:', error);
+            throw error;
+        }
     }
 }; 
