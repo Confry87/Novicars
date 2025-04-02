@@ -176,15 +176,31 @@ def import_excel():
             try:
                 targa = str(row.get('targa', '')).strip()
                 
+                # Verifica i campi obbligatori
+                if not targa:
+                    raise ValueError("La targa è un campo obbligatorio")
+                
+                if not row.get('fornitore') and not fornitore_forzato:
+                    raise ValueError("Il fornitore è un campo obbligatorio")
+                
+                if not row.get('modello'):
+                    raise ValueError("Il modello è un campo obbligatorio")
+                
+                if pd.isna(row.get('anno')):
+                    raise ValueError("L'anno è un campo obbligatorio")
+                
+                if pd.isna(row.get('prezzo')):
+                    raise ValueError("Il prezzo è un campo obbligatorio")
+                
                 # Cerca se esiste già un record con la stessa targa
-                existing_auto = Auto.query.filter_by(targa=targa).first() if targa else None
+                existing_auto = Auto.query.filter_by(targa=targa).first()
                 
                 if existing_auto:
                     # Aggiorna il record esistente
                     existing_auto.fornitore = fornitore_forzato if fornitore_forzato else str(row.get('fornitore', ''))
                     existing_auto.modello = str(row.get('modello', ''))
-                    existing_auto.anno = int(row.get('anno')) if pd.notna(row.get('anno')) else None
-                    existing_auto.prezzo = float(row.get('prezzo')) if pd.notna(row.get('prezzo')) else None
+                    existing_auto.anno = int(row.get('anno'))
+                    existing_auto.prezzo = float(row.get('prezzo'))
                     existing_auto.colore = str(row.get('colore', ''))
                     existing_auto.chilometraggio = int(row.get('chilometraggio')) if pd.notna(row.get('chilometraggio')) else None
                     existing_auto.data_importazione = datetime.utcnow()
@@ -194,8 +210,8 @@ def import_excel():
                     auto = Auto(
                         fornitore=fornitore_forzato if fornitore_forzato else str(row.get('fornitore', '')),
                         modello=str(row.get('modello', '')),
-                        anno=int(row.get('anno')) if pd.notna(row.get('anno')) else None,
-                        prezzo=float(row.get('prezzo')) if pd.notna(row.get('prezzo')) else None,
+                        anno=int(row.get('anno')),
+                        prezzo=float(row.get('prezzo')),
                         colore=str(row.get('colore', '')),
                         targa=targa,
                         chilometraggio=int(row.get('chilometraggio')) if pd.notna(row.get('chilometraggio')) else None,
@@ -204,8 +220,17 @@ def import_excel():
                     db.session.add(auto)
                     records_imported += 1
             except Exception as e:
-                print(f"Errore nell'importazione della riga: {e}")
-                continue
+                logger.error(f"Errore nell'importazione della riga: {str(e)}")
+                error_message = f"Errore nella riga {_ + 1}: {str(e)}"
+                log = ImportLog(
+                    file_name=filename,
+                    records_imported=0,
+                    success=False,
+                    error_message=error_message
+                )
+                db.session.add(log)
+                db.session.commit()
+                return jsonify({'error': error_message}), 400
 
         db.session.commit()
 
