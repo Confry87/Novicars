@@ -4,10 +4,7 @@ import { Auto, SearchFilters, ImportLog } from '../types';
 const API_URL = 'https://novicars-backend.onrender.com';
 
 const api = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    }
+    baseURL: API_URL
 });
 
 // Funzione per ottenere l'URL completo dell'endpoint
@@ -19,7 +16,12 @@ export const apiService = {
     // Ricerca auto
     searchAutos: async (filters: SearchFilters): Promise<Auto[]> => {
         try {
-            const response = await api.get('/api/auto', { params: filters });
+            const response = await api.get('/api/auto', { 
+                params: filters,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             return response.data;
         } catch (error) {
             console.error('Errore nel recupero delle auto:', error);
@@ -30,7 +32,11 @@ export const apiService = {
     // Ottieni una singola auto per ID
     getAutoById: async (id: number): Promise<Auto> => {
         try {
-            const response = await api.get(`/api/auto/${id}`);
+            const response = await api.get(`/api/auto/${id}`, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             return response.data;
         } catch (error) {
             console.error(`Errore nel recupero dell'auto con ID ${id}:`, error);
@@ -48,8 +54,8 @@ export const apiService = {
             }
             const response = await api.post('/api/import', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             return response.data;
         } catch (error: any) {
@@ -64,7 +70,11 @@ export const apiService = {
     // Ottieni log importazioni
     getImportLogs: async (): Promise<ImportLog[]> => {
         try {
-            const response = await api.get('/api/import/logs');
+            const response = await api.get('/api/import/logs', {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             return response.data;
         } catch (error) {
             console.error('Errore nel recupero dei log di importazione:', error);
@@ -75,7 +85,11 @@ export const apiService = {
     // Pulisci database
     clearDatabase: async () => {
         try {
-            const response = await api.post('/api/clear-database');
+            const response = await api.post('/api/clear-database', null, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             return response.data;
         } catch (error) {
             console.error('Errore durante la pulizia del database:', error);
