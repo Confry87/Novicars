@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { Auto, SearchFilters, ImportLog } from '../types';
-import { getApiUrl, axiosConfig } from '../config';
 
 const API_URL = 'https://novicars-backend.onrender.com/api';
 

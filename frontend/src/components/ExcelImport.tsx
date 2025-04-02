@@ -8,8 +8,7 @@ import {
     Alert,
     CircularProgress,
 } from '@mui/material';
-import axios from 'axios';
-import { getApiUrl } from '../config';
+import { apiService } from '../services/api';
 
 interface ApiResponse {
     message: string;
@@ -54,20 +53,9 @@ export const ExcelImport: React.FC = () => {
         setError('');
         setMessage('');
 
-        const formData = new FormData();
-        formData.append('file', file);
-        if (fornitoreForzato) {
-            formData.append('fornitore_forzato', fornitoreForzato);
-        }
-
         try {
-            const response = await axios.post<ApiResponse>(`${getApiUrl()}/import`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-
-            setMessage(response.data.message);
+            const response = await apiService.importExcel(file, fornitoreForzato);
+            setMessage(response.message);
             setFile(null);
             setFornitoreForzato('');
         } catch (err) {
@@ -88,8 +76,8 @@ export const ExcelImport: React.FC = () => {
         setMessage('');
 
         try {
-            const response = await axios.post<ApiResponse>(`${getApiUrl()}/clear-database`);
-            setMessage(response.data.message);
+            const response = await apiService.clearDatabase();
+            setMessage(response.message);
         } catch (err) {
             const error = err as ApiError;
             setError(error.response?.data?.error || 'Errore durante la pulizia del database');
