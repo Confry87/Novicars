@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
 import pandas as pd
-from config import Config
+from config import Config, UPLOAD_FOLDER, MAX_CONTENT_LENGTH, CORS_ORIGINS
 from auth import init_auth, jwt_required
 import logging
 
@@ -18,20 +18,11 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 
 # Crea la cartella uploads se non esiste
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-logger.info(f"Upload folder created at: {app.config['UPLOAD_FOLDER']}")
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+logger.info(f"Upload folder created at: {UPLOAD_FOLDER}")
 
 # Configurazione CORS
-CORS(app, 
-    resources={
-        r"/*": {
-            "origins": ["https://novicars.netlify.app", "https://*.netlify.app", "http://localhost:3000", "http://localhost:5173"],
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
-            "supports_credentials": True,
-            "expose_headers": ["Content-Type", "Authorization"]
-        }
-    })
+CORS(app, origins=CORS_ORIGINS)
 
 # Middleware per gestire le richieste OPTIONS e CORS
 @app.after_request
@@ -204,7 +195,7 @@ def import_excel():
         fornitore_forzato = request.form.get('fornitore_forzato', '').strip()
 
         filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
 
         # Leggi il file Excel
