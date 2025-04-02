@@ -52,9 +52,12 @@ export const apiService = {
                 },
             });
             return response.data;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Errore durante l\'importazione del file Excel:', error);
-            throw error;
+            if (error.response?.data?.error) {
+                throw new Error(error.response.data.error);
+            }
+            throw new Error('Errore durante l\'importazione del file Excel');
         }
     },
 

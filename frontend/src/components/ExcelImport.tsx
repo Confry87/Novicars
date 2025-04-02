@@ -58,9 +58,8 @@ export const ExcelImport: React.FC = () => {
             setMessage(response.message || 'Importazione completata con successo');
             setFile(null);
             setFornitoreForzato('');
-        } catch (err) {
-            const error = err as ApiError;
-            setError(error.response?.data?.error || 'Errore durante l\'importazione');
+        } catch (err: any) {
+            setError(err.message || 'Errore durante l\'importazione');
         } finally {
             setLoading(false);
         }
