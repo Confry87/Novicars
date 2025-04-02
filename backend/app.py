@@ -46,74 +46,46 @@ def after_request(response):
 # Inizializza l'autenticazione
 init_auth(app)
 
+# Definizione del modello Auto
+class Auto(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    fornitore = db.Column(db.String(100), nullable=False)
+    modello = db.Column(db.String(100), nullable=False)
+    anno = db.Column(db.Integer, nullable=False)
+    prezzo = db.Column(db.Float, nullable=False)
+    colore = db.Column(db.String(50))
+    targa = db.Column(db.String(20), unique=True)
+    chilometraggio = db.Column(db.Integer)
+    data_importazione = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Crea le tabelle del database
+with app.app_context():
+    try:
+        db.create_all()
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Error creating database tables: {e}")
+        raise
+
 # Mapping delle colonne per gestire i diversi nomi possibili
 column_mapping = {
     'Marca': 'fornitore',
     'marca': 'fornitore',
-    'brand': 'fornitore',
-    'Descrizione Marca': 'fornitore',
-    
     'Modello': 'modello',
     'modello': 'modello',
-    'model': 'modello',
-    'Descrizione Versione': 'modello',
-    'Descrizione Modello': 'modello',
-    'Descrizione veicolo': 'modello',
-    
-    'Model Year': 'anno',
     'Anno': 'anno',
     'anno': 'anno',
-    'year': 'anno',
-    
-    'Prezzo Veicolo': 'prezzo',
     'Prezzo': 'prezzo',
     'prezzo': 'prezzo',
-    'price': 'prezzo',
-    'Prezzo Listino Privil.': 'prezzo',
-    'Prezzo Veicolo': 'prezzo',
-    
     'Colore': 'colore',
     'colore': 'colore',
-    'color': 'colore',
-    
     'Targa': 'targa',
     'targa': 'targa',
-    'plate': 'targa',
-    
-    'Km (vei. AZ.)': 'chilometraggio',
-    'Km': 'chilometraggio',
     'Chilometraggio': 'chilometraggio',
-    'chilometraggio': 'chilometraggio',
-    'km': 'chilometraggio',
-    'kilometers': 'chilometraggio',
-    'Km (vei. AZ.)': 'chilometraggio'
+    'chilometraggio': 'chilometraggio'
 }
 
 # Modelli
-class Auto(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    fornitore = db.Column(db.String(200), nullable=False)
-    modello = db.Column(db.String(500), nullable=False)
-    anno = db.Column(db.Integer)
-    prezzo = db.Column(db.Float)
-    colore = db.Column(db.String(200))
-    targa = db.Column(db.String(20))
-    chilometraggio = db.Column(db.Integer)
-    data_importazione = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'fornitore': self.fornitore,
-            'modello': self.modello,
-            'anno': self.anno,
-            'prezzo': self.prezzo,
-            'colore': self.colore,
-            'targa': self.targa,
-            'chilometraggio': self.chilometraggio,
-            'data_importazione': self.data_importazione.isoformat()
-        }
-
 class ImportLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     file_name = db.Column(db.String(255), nullable=False)
