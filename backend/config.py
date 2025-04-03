@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+import tempfile
 
 class Config:
     # Configurazione del database
@@ -16,5 +17,5 @@ class Config:
     ]
     
     # Configurazione upload
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+    UPLOAD_FOLDER = tempfile.gettempdir()  # Usa la directory temporanea del sistema
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max-limit 
