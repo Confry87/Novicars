@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
 import pandas as pd
-from config import Config, UPLOAD_FOLDER, MAX_CONTENT_LENGTH, CORS_ORIGINS
+from backend.config import Config, UPLOAD_FOLDER, MAX_CONTENT_LENGTH, CORS_ORIGINS
 import logging
 
 # Configurazione logging
