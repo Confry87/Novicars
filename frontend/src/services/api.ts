@@ -44,7 +44,7 @@ export const apiService = {
             });
             return response.data;
         } catch (error: any) {
-            handleApiError(error, 'ricerca delle auto');
+            return handleApiError(error, 'ricerca delle auto');
         }
     },
 
@@ -58,7 +58,7 @@ export const apiService = {
             });
             return response.data;
         } catch (error: any) {
-            handleApiError(error, `recupero dell'auto con ID ${id}`);
+            return handleApiError(error, `recupero dell'auto con ID ${id}`);
         }
     },
 
@@ -84,7 +84,7 @@ export const apiService = {
 
             return response.data.log;
         } catch (error: any) {
-            handleApiError(error, 'importazione del file Excel');
+            return handleApiError(error, 'importazione del file Excel');
         }
     },
 
@@ -98,7 +98,7 @@ export const apiService = {
             });
             return response.data;
         } catch (error: any) {
-            handleApiError(error, 'recupero dei log di importazione');
+            return handleApiError(error, 'recupero dei log di importazione');
         }
     },
 
@@ -112,7 +112,7 @@ export const apiService = {
             });
             return response.data;
         } catch (error: any) {
-            handleApiError(error, 'pulizia del database');
+            return handleApiError(error, 'pulizia del database');
         }
     }
 }; 
