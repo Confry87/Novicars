@@ -19,10 +19,10 @@ db = SQLAlchemy(app)
 # Definizione del modello Auto
 class Auto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fornitore = db.Column(db.String(100), nullable=False)
-    modello = db.Column(db.String(100), nullable=False)
-    anno = db.Column(db.Integer, nullable=False)
-    prezzo = db.Column(db.Float, nullable=False)
+    fornitore = db.Column(db.String(100))
+    modello = db.Column(db.String(100))
+    anno = db.Column(db.Integer)
+    prezzo = db.Column(db.Float)
     colore = db.Column(db.String(50))
     targa = db.Column(db.String(20), unique=True)
     chilometraggio = db.Column(db.Integer)
@@ -198,21 +198,9 @@ def import_excel():
                 targa = str(row.get('targa', '')).strip()
                 logger.info(f"Elaborazione riga {index + 1}, targa: {targa}")
                 
-                # Verifica i campi obbligatori
+                # Verifica solo la targa come campo obbligatorio
                 if not targa:
                     raise ValueError("La targa è un campo obbligatorio")
-                
-                if not row.get('fornitore') and not fornitore_forzato:
-                    raise ValueError("Il fornitore è un campo obbligatorio")
-                
-                if not row.get('modello'):
-                    raise ValueError("Il modello è un campo obbligatorio")
-                
-                if pd.isna(row.get('anno')):
-                    raise ValueError("L'anno è un campo obbligatorio")
-                
-                if pd.isna(row.get('prezzo')):
-                    raise ValueError("Il prezzo è un campo obbligatorio")
                 
                 # Cerca se esiste già un record con la stessa targa
                 existing_auto = Auto.query.filter_by(targa=targa).first()
