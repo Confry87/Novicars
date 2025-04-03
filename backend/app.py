@@ -16,6 +16,37 @@ app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 
+# Definizione del modello Auto
+class Auto(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    fornitore = db.Column(db.String(100), nullable=False)
+    modello = db.Column(db.String(100), nullable=False)
+    anno = db.Column(db.Integer, nullable=False)
+    prezzo = db.Column(db.Float, nullable=False)
+    colore = db.Column(db.String(50))
+    targa = db.Column(db.String(20), unique=True)
+    chilometraggio = db.Column(db.Integer)
+    data_importazione = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Definizione del modello ImportLog
+class ImportLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    file_name = db.Column(db.String(255), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    records_imported = db.Column(db.Integer, default=0)
+    success = db.Column(db.Boolean, default=True)
+    error_message = db.Column(db.Text)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'file_name': self.file_name,
+            'timestamp': self.timestamp.isoformat(),
+            'records_imported': self.records_imported,
+            'success': self.success,
+            'error_message': self.error_message
+        }
+
 # Crea la cartella uploads se non esiste
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 logger.info(f"Upload folder created at: {UPLOAD_FOLDER}")
@@ -53,18 +84,6 @@ def after_request(response):
     
     return response
 
-# Definizione del modello Auto
-class Auto(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    fornitore = db.Column(db.String(100), nullable=False)
-    modello = db.Column(db.String(100), nullable=False)
-    anno = db.Column(db.Integer, nullable=False)
-    prezzo = db.Column(db.Float, nullable=False)
-    colore = db.Column(db.String(50))
-    targa = db.Column(db.String(20), unique=True)
-    chilometraggio = db.Column(db.Integer)
-    data_importazione = db.Column(db.DateTime, default=datetime.utcnow)
-
 # Mapping delle colonne per gestire i diversi nomi possibili
 column_mapping = {
     'Marca': 'fornitore',
@@ -82,25 +101,6 @@ column_mapping = {
     'Chilometraggio': 'chilometraggio',
     'chilometraggio': 'chilometraggio'
 }
-
-# Modelli
-class ImportLog(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    file_name = db.Column(db.String(255), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    records_imported = db.Column(db.Integer, default=0)
-    success = db.Column(db.Boolean, default=True)
-    error_message = db.Column(db.Text)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'file_name': self.file_name,
-            'timestamp': self.timestamp.isoformat(),
-            'records_imported': self.records_imported,
-            'success': self.success,
-            'error_message': self.error_message
-        }
 
 # Route per le auto
 @app.route('/api/auto', methods=['GET'])
