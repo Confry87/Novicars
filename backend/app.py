@@ -217,29 +217,68 @@ def import_excel():
                 # Cerca se esiste già un record con la stessa targa
                 existing_auto = Auto.query.filter_by(targa=targa).first()
                 
+                # Funzione helper per gestire i campi vuoti
+                def get_field_value(value, field_type=str):
+                    if pd.isna(value) or value == '' or value is None:
+                        return None
+                    try:
+                        return field_type(value)
+                    except (ValueError, TypeError):
+                        return None
+
                 if existing_auto:
-                    # Aggiorna il record esistente
-                    existing_auto.fornitore = fornitore_forzato if fornitore_forzato else str(row.get('fornitore', ''))
-                    existing_auto.modello = str(row.get('modello', ''))
-                    existing_auto.anno = int(row.get('anno'))
-                    existing_auto.prezzo = float(row.get('prezzo'))
-                    existing_auto.colore = str(row.get('colore', ''))
-                    existing_auto.chilometraggio = int(row.get('chilometraggio')) if pd.notna(row.get('chilometraggio')) else None
+                    # Aggiorna solo i campi non vuoti
+                    if fornitore_forzato:
+                        existing_auto.fornitore = fornitore_forzato
+                    elif row.get('fornitore'):
+                        existing_auto.fornitore = str(row.get('fornitore'))
+                    
+                    if row.get('modello'):
+                        existing_auto.modello = str(row.get('modello'))
+                    
+                    if row.get('anno'):
+                        existing_auto.anno = get_field_value(row.get('anno'), int)
+                    
+                    if row.get('prezzo'):
+                        existing_auto.prezzo = get_field_value(row.get('prezzo'), float)
+                    
+                    if row.get('colore'):
+                        existing_auto.colore = str(row.get('colore'))
+                    
+                    if row.get('chilometraggio'):
+                        existing_auto.chilometraggio = get_field_value(row.get('chilometraggio'), int)
+                    
                     existing_auto.data_importazione = datetime.utcnow()
                     records_updated += 1
                     logger.info(f"Record aggiornato: {targa}")
                 else:
-                    # Crea un nuovo record
-                    auto = Auto(
-                        fornitore=fornitore_forzato if fornitore_forzato else str(row.get('fornitore', '')),
-                        modello=str(row.get('modello', '')),
-                        anno=int(row.get('anno')),
-                        prezzo=float(row.get('prezzo')),
-                        colore=str(row.get('colore', '')),
-                        targa=targa,
-                        chilometraggio=int(row.get('chilometraggio')) if pd.notna(row.get('chilometraggio')) else None,
-                        data_importazione=datetime.utcnow()
-                    )
+                    # Crea un nuovo record solo con i campi non vuoti
+                    auto_data = {
+                        'targa': targa,
+                        'data_importazione': datetime.utcnow()
+                    }
+                    
+                    if fornitore_forzato:
+                        auto_data['fornitore'] = fornitore_forzato
+                    elif row.get('fornitore'):
+                        auto_data['fornitore'] = str(row.get('fornitore'))
+                    
+                    if row.get('modello'):
+                        auto_data['modello'] = str(row.get('modello'))
+                    
+                    if row.get('anno'):
+                        auto_data['anno'] = get_field_value(row.get('anno'), int)
+                    
+                    if row.get('prezzo'):
+                        auto_data['prezzo'] = get_field_value(row.get('prezzo'), float)
+                    
+                    if row.get('colore'):
+                        auto_data['colore'] = str(row.get('colore'))
+                    
+                    if row.get('chilometraggio'):
+                        auto_data['chilometraggio'] = get_field_value(row.get('chilometraggio'), int)
+                    
+                    auto = Auto(**auto_data)
                     db.session.add(auto)
                     records_imported += 1
                     logger.info(f"Nuovo record creato: {targa}")
