@@ -192,6 +192,7 @@ def import_excel():
         # Mappa le colonne del file Excel ai campi del modello
         records_imported = 0
         records_updated = 0
+        import_errors = []
         
         for index, row in df.iterrows():
             try:
@@ -271,18 +272,28 @@ def import_excel():
                     records_imported += 1
                     logger.info(f"Nuovo record creato: {targa}")
             except Exception as e:
-                logger.error(f"Errore nell'importazione della riga {index + 1}: {str(e)}")
                 error_message = f"Errore nella riga {index + 1}: {str(e)}"
-                log = ImportLog(
-                    file_name=filename,
-                    records_imported=0,
-                    success=False,
-                    error_message=error_message
-                )
-                db.session.add(log)
-                db.session.commit()
-                return jsonify({'error': error_message}), 400
+                logger.error(error_message)
+                import_errors.append(error_message)
+                continue
 
+        # Se ci sono errori di importazione, crea un log con gli errori
+        if import_errors:
+            log = ImportLog(
+                file_name=filename,
+                records_imported=records_imported + records_updated,
+                success=False,
+                error_message="\n".join(import_errors)
+            )
+            db.session.add(log)
+            db.session.commit()
+            return jsonify({
+                'error': 'Alcuni record non sono stati importati correttamente',
+                'details': import_errors,
+                'log': log.to_dict()
+            }), 400
+
+        # Se non ci sono errori, committa le modifiche
         try:
             db.session.commit()
             logger.info(f"Database aggiornato con successo. Importati: {records_imported}, Aggiornati: {records_updated}")
