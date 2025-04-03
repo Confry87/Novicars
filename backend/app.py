@@ -147,200 +147,122 @@ def get_auto(id):
 # Route per l'importazione
 @app.route('/api/import', methods=['POST'])
 def import_excel():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Nessun file caricato'}), 400
+    
+    file = request.files['file']
+    fornitore_forzato = request.form.get('fornitore')
+    
+    if file.filename == '':
+        return jsonify({'error': 'Nessun file selezionato'}), 400
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        return jsonify({'error': 'Formato file non supportato. Usa .xlsx o .xls'}), 400
+    
     filepath = None
     try:
-        if 'file' not in request.files:
-            logger.error("Nessun file caricato nella richiesta")
-            return jsonify({'error': 'Nessun file caricato'}), 400
-
-        file = request.files['file']
-        if file.filename == '':
-            logger.error("Nome file vuoto")
-            return jsonify({'error': 'Nessun file selezionato'}), 400
-
-        if not file.filename.endswith(('.xls', '.xlsx')):
-            logger.error(f"Formato file non supportato: {file.filename}")
-            return jsonify({'error': 'Formato file non supportato'}), 400
-
-        # Ottieni il fornitore forzato dalla richiesta
-        fornitore_forzato = request.form.get('fornitore_forzato', '').strip()
-        logger.info(f"Fornitore forzato: {fornitore_forzato}")
-
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        logger.info(f"Salvataggio file in: {filepath}")
+        # Salva il file temporaneamente
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
+        file.save(filepath)
+        app.logger.info(f"File salvato temporaneamente: {filepath}")
         
-        try:
-            file.save(filepath)
-            logger.info("File salvato con successo")
-        except Exception as e:
-            logger.error(f"Errore durante il salvataggio del file: {str(e)}")
-            return jsonify({'error': f'Errore durante il salvataggio del file: {str(e)}'}), 500
-
         # Leggi il file Excel
-        try:
-            df = pd.read_excel(filepath)
-            logger.info(f"File Excel letto con successo. Colonne trovate: {df.columns.tolist()}")
-        except Exception as e:
-            logger.error(f"Errore durante la lettura del file Excel: {str(e)}")
-            return jsonify({'error': f'Errore durante la lettura del file Excel: {str(e)}'}), 500
+        df = pd.read_excel(filepath)
+        app.logger.info(f"File Excel letto con successo. Colonne trovate: {df.columns.tolist()}")
         
-        # Rinomina le colonne secondo il mapping
-        df.columns = [column_mapping.get(col, col) for col in df.columns]
-        logger.info(f"Colonne rinominate: {df.columns.tolist()}")
-        
-        # Mappa le colonne del file Excel ai campi del modello
-        records_imported = 0
-        records_updated = 0
-        import_errors = []
-        
-        for index, row in df.iterrows():
-            try:
-                targa = str(row.get('targa', '')).strip()
-                logger.info(f"Elaborazione riga {index + 1}, targa: {targa}")
-                
-                # Verifica solo la targa come campo obbligatorio
-                if not targa:
-                    raise ValueError("La targa è un campo obbligatorio")
-                
-                # Cerca se esiste già un record con la stessa targa
-                existing_auto = Auto.query.filter_by(targa=targa).first()
-                
-                # Funzione helper per gestire i campi vuoti
-                def get_field_value(value, field_type=str):
-                    if pd.isna(value) or value == '' or value is None:
-                        return None
-                    try:
-                        return field_type(value)
-                    except (ValueError, TypeError):
-                        return None
-
-                if existing_auto:
-                    # Aggiorna solo i campi non vuoti
-                    if fornitore_forzato:
-                        existing_auto.fornitore = fornitore_forzato
-                    elif row.get('fornitore'):
-                        existing_auto.fornitore = str(row.get('fornitore'))
-                    
-                    if row.get('modello'):
-                        existing_auto.modello = str(row.get('modello'))
-                    
-                    if row.get('anno'):
-                        existing_auto.anno = get_field_value(row.get('anno'), int)
-                    
-                    if row.get('prezzo'):
-                        existing_auto.prezzo = get_field_value(row.get('prezzo'), float)
-                    
-                    if row.get('colore'):
-                        existing_auto.colore = str(row.get('colore'))
-                    
-                    if row.get('chilometraggio'):
-                        existing_auto.chilometraggio = get_field_value(row.get('chilometraggio'), int)
-                    
-                    existing_auto.data_importazione = datetime.utcnow()
-                    records_updated += 1
-                    logger.info(f"Record aggiornato: {targa}")
-                else:
-                    # Crea un nuovo record solo con i campi non vuoti
-                    auto_data = {
-                        'targa': targa,
-                        'data_importazione': datetime.utcnow()
-                    }
-                    
-                    if fornitore_forzato:
-                        auto_data['fornitore'] = fornitore_forzato
-                    elif row.get('fornitore'):
-                        auto_data['fornitore'] = str(row.get('fornitore'))
-                    
-                    if row.get('modello'):
-                        auto_data['modello'] = str(row.get('modello'))
-                    
-                    if row.get('anno'):
-                        auto_data['anno'] = get_field_value(row.get('anno'), int)
-                    
-                    if row.get('prezzo'):
-                        auto_data['prezzo'] = get_field_value(row.get('prezzo'), float)
-                    
-                    if row.get('colore'):
-                        auto_data['colore'] = str(row.get('colore'))
-                    
-                    if row.get('chilometraggio'):
-                        auto_data['chilometraggio'] = get_field_value(row.get('chilometraggio'), int)
-                    
-                    auto = Auto(**auto_data)
-                    db.session.add(auto)
-                    records_imported += 1
-                    logger.info(f"Nuovo record creato: {targa}")
-            except Exception as e:
-                error_message = f"Errore nella riga {index + 1}: {str(e)}"
-                logger.error(error_message)
-                import_errors.append(error_message)
-                continue
-
-        # Se ci sono errori di importazione, crea un log con gli errori
-        if import_errors:
-            log = ImportLog(
-                file_name=filename,
-                records_imported=records_imported + records_updated,
-                success=False,
-                error_message="\n".join(import_errors)
-            )
-            db.session.add(log)
-            db.session.commit()
+        # Verifica le colonne richieste
+        required_columns = ['targa', 'marca', 'modello', 'anno', 'prezzo', 'fornitore']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
             return jsonify({
-                'error': 'Alcuni record non sono stati importati correttamente',
-                'details': import_errors,
-                'log': log.to_dict()
+                'error': f'Colonne mancanti nel file: {", ".join(missing_columns)}',
+                'columns_found': df.columns.tolist()
             }), 400
-
-        # Se non ci sono errori, committa le modifiche
-        try:
-            db.session.commit()
-            logger.info(f"Database aggiornato con successo. Importati: {records_imported}, Aggiornati: {records_updated}")
-        except Exception as e:
-            logger.error(f"Errore durante il commit del database: {str(e)}")
-            db.session.rollback()
-            return jsonify({'error': f'Errore durante il salvataggio nel database: {str(e)}'}), 500
-
-        # Crea il log dell'importazione
-        log = ImportLog(
-            file_name=filename,
-            records_imported=records_imported + records_updated,
-            success=True
-        )
-        db.session.add(log)
-        db.session.commit()
-
-        # Rimuovi il file temporaneo
-        try:
-            if filepath and os.path.exists(filepath):
-                os.remove(filepath)
-                logger.info("File temporaneo rimosso con successo")
-        except Exception as e:
-            logger.error(f"Errore durante la rimozione del file temporaneo: {str(e)}")
-
-        return jsonify({
-            'message': f'Importati con successo {records_imported} nuovi record e aggiornati {records_updated} record esistenti',
-            'log': log.to_dict()
-        })
-
+        
+        # Converti i tipi di dati
+        df['anno'] = pd.to_numeric(df['anno'], errors='coerce')
+        df['prezzo'] = pd.to_numeric(df['prezzo'], errors='coerce')
+        
+        # Rimuovi le righe con valori nulli nei campi obbligatori
+        df = df.dropna(subset=['targa', 'marca', 'modello', 'anno', 'prezzo'])
+        
+        # Converti NaN in None per i campi opzionali
+        df['km'] = df['km'].where(pd.notnull(df['km']), None)
+        df['note'] = df['note'].where(pd.notnull(df['note']), None)
+        
+        # Imposta il fornitore forzato se specificato
+        if fornitore_forzato:
+            df['fornitore'] = fornitore_forzato
+        
+        # Verifica che non ci siano righe con valori nulli nei campi obbligatori
+        null_rows = df[df.isnull().any(axis=1)]
+        if not null_rows.empty:
+            return jsonify({
+                'error': 'Sono state trovate righe con valori mancanti nei campi obbligatori',
+                'invalid_rows': null_rows.to_dict('records')
+            }), 400
+        
+        # Converti il DataFrame in una lista di dizionari
+        records = df.to_dict('records')
+        app.logger.info(f"Elaborazione di {len(records)} righe valide")
+        
+        # Inserisci i dati nel database
+        for i, record in enumerate(records, 1):
+            try:
+                app.logger.info(f"Elaborazione riga {i}, targa: {record.get('targa')}")
+                
+                # Verifica che tutti i campi obbligatori siano presenti e validi
+                if not all(record.get(field) is not None for field in ['targa', 'marca', 'modello', 'anno', 'prezzo']):
+                    app.logger.error(f"Riga {i} mancante di campi obbligatori: {record}")
+                    continue
+                
+                # Verifica che anno e prezzo siano numeri validi
+                if not isinstance(record['anno'], (int, float)) or pd.isna(record['anno']):
+                    app.logger.error(f"Riga {i}: anno non valido: {record['anno']}")
+                    continue
+                    
+                if not isinstance(record['prezzo'], (int, float)) or pd.isna(record['prezzo']):
+                    app.logger.error(f"Riga {i}: prezzo non valido: {record['prezzo']}")
+                    continue
+                
+                # Crea l'oggetto Auto con i dati validati
+                auto = Auto(
+                    targa=str(record['targa']).strip(),
+                    marca=str(record['marca']).strip(),
+                    modello=str(record['modello']).strip(),
+                    anno=int(record['anno']),
+                    prezzo=float(record['prezzo']),
+                    km=float(record['km']) if record.get('km') is not None else None,
+                    note=str(record['note']).strip() if record.get('note') is not None else None,
+                    fornitore=str(record['fornitore']).strip()
+                )
+                
+                db.session.add(auto)
+                db.session.commit()
+                app.logger.info(f"Riga {i} elaborata con successo")
+                
+            except Exception as e:
+                app.logger.error(f"Errore nella riga {i}: {str(e)}")
+                db.session.rollback()
+                return jsonify({
+                    'error': f'Errore nella riga {i}: {str(e)}',
+                    'row_data': record
+                }), 400
+        
+        return jsonify({'message': f'Importati con successo {len(records)} record'}), 200
+        
     except Exception as e:
-        logger.error(f"Errore generale durante l'importazione: {str(e)}")
+        app.logger.error(f"Errore durante l'importazione: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+        
+    finally:
+        # Rimuovi il file temporaneo
         if filepath and os.path.exists(filepath):
             try:
                 os.remove(filepath)
-            except:
-                pass
-
-        log = ImportLog(
-            file_name=file.filename if 'file' in locals() else 'unknown',
-            records_imported=0,
-            success=False,
-            error_message=str(e)
-        )
-        db.session.add(log)
-        db.session.commit()
-        return jsonify({'error': str(e)}), 500
+                app.logger.info(f"File temporaneo rimosso: {filepath}")
+            except Exception as e:
+                app.logger.error(f"Errore durante la rimozione del file temporaneo: {str(e)}")
 
 @app.route('/api/import/logs', methods=['GET'])
 def get_import_logs():
