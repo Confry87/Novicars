@@ -51,14 +51,6 @@ class ImportLog(db.Model):
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 logger.info(f"Upload folder created at: {UPLOAD_FOLDER}")
 
-# Crea le tabelle del database
-try:
-    db.create_all()
-    logger.info("Database tables created successfully")
-except Exception as e:
-    logger.error(f"Error creating database tables: {e}")
-    raise
-
 # Configurazione CORS
 CORS(app, resources={
     r"/*": {
@@ -83,6 +75,15 @@ def after_request(response):
         logger.warning(f"Origin not allowed: {origin}")
     
     return response
+
+# Crea le tabelle del database all'avvio dell'applicazione
+with app.app_context():
+    try:
+        db.create_all()
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Error creating database tables: {e}")
+        raise
 
 # Mapping delle colonne per gestire i diversi nomi possibili
 column_mapping = {
