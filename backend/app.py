@@ -144,37 +144,56 @@ def get_auto(id):
 # Route per l'importazione
 @app.route('/api/import', methods=['POST'])
 def import_excel():
+    filepath = None
     try:
         if 'file' not in request.files:
+            logger.error("Nessun file caricato nella richiesta")
             return jsonify({'error': 'Nessun file caricato'}), 400
 
         file = request.files['file']
         if file.filename == '':
+            logger.error("Nome file vuoto")
             return jsonify({'error': 'Nessun file selezionato'}), 400
 
         if not file.filename.endswith(('.xls', '.xlsx')):
+            logger.error(f"Formato file non supportato: {file.filename}")
             return jsonify({'error': 'Formato file non supportato'}), 400
 
         # Ottieni il fornitore forzato dalla richiesta
         fornitore_forzato = request.form.get('fornitore_forzato', '').strip()
+        logger.info(f"Fornitore forzato: {fornitore_forzato}")
 
         filename = secure_filename(file.filename)
         filepath = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(filepath)
+        logger.info(f"Salvataggio file in: {filepath}")
+        
+        try:
+            file.save(filepath)
+            logger.info("File salvato con successo")
+        except Exception as e:
+            logger.error(f"Errore durante il salvataggio del file: {str(e)}")
+            return jsonify({'error': f'Errore durante il salvataggio del file: {str(e)}'}), 500
 
         # Leggi il file Excel
-        df = pd.read_excel(filepath)
+        try:
+            df = pd.read_excel(filepath)
+            logger.info(f"File Excel letto con successo. Colonne trovate: {df.columns.tolist()}")
+        except Exception as e:
+            logger.error(f"Errore durante la lettura del file Excel: {str(e)}")
+            return jsonify({'error': f'Errore durante la lettura del file Excel: {str(e)}'}), 500
         
         # Rinomina le colonne secondo il mapping
         df.columns = [column_mapping.get(col, col) for col in df.columns]
+        logger.info(f"Colonne rinominate: {df.columns.tolist()}")
         
         # Mappa le colonne del file Excel ai campi del modello
         records_imported = 0
         records_updated = 0
         
-        for _, row in df.iterrows():
+        for index, row in df.iterrows():
             try:
                 targa = str(row.get('targa', '')).strip()
+                logger.info(f"Elaborazione riga {index + 1}, targa: {targa}")
                 
                 # Verifica i campi obbligatori
                 if not targa:
@@ -205,6 +224,7 @@ def import_excel():
                     existing_auto.chilometraggio = int(row.get('chilometraggio')) if pd.notna(row.get('chilometraggio')) else None
                     existing_auto.data_importazione = datetime.utcnow()
                     records_updated += 1
+                    logger.info(f"Record aggiornato: {targa}")
                 else:
                     # Crea un nuovo record
                     auto = Auto(
@@ -219,9 +239,10 @@ def import_excel():
                     )
                     db.session.add(auto)
                     records_imported += 1
+                    logger.info(f"Nuovo record creato: {targa}")
             except Exception as e:
-                logger.error(f"Errore nell'importazione della riga: {str(e)}")
-                error_message = f"Errore nella riga {_ + 1}: {str(e)}"
+                logger.error(f"Errore nell'importazione della riga {index + 1}: {str(e)}")
+                error_message = f"Errore nella riga {index + 1}: {str(e)}"
                 log = ImportLog(
                     file_name=filename,
                     records_imported=0,
@@ -232,7 +253,13 @@ def import_excel():
                 db.session.commit()
                 return jsonify({'error': error_message}), 400
 
-        db.session.commit()
+        try:
+            db.session.commit()
+            logger.info(f"Database aggiornato con successo. Importati: {records_imported}, Aggiornati: {records_updated}")
+        except Exception as e:
+            logger.error(f"Errore durante il commit del database: {str(e)}")
+            db.session.rollback()
+            return jsonify({'error': f'Errore durante il salvataggio nel database: {str(e)}'}), 500
 
         # Crea il log dell'importazione
         log = ImportLog(
@@ -244,7 +271,12 @@ def import_excel():
         db.session.commit()
 
         # Rimuovi il file temporaneo
-        os.remove(filepath)
+        try:
+            if filepath and os.path.exists(filepath):
+                os.remove(filepath)
+                logger.info("File temporaneo rimosso con successo")
+        except Exception as e:
+            logger.error(f"Errore durante la rimozione del file temporaneo: {str(e)}")
 
         return jsonify({
             'message': f'Importati con successo {records_imported} nuovi record e aggiornati {records_updated} record esistenti',
@@ -252,7 +284,8 @@ def import_excel():
         })
 
     except Exception as e:
-        if 'filepath' in locals():
+        logger.error(f"Errore generale durante l'importazione: {str(e)}")
+        if filepath and os.path.exists(filepath):
             try:
                 os.remove(filepath)
             except:
