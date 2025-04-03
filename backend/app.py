@@ -21,10 +21,13 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 logger.info(f"Upload folder created at: {UPLOAD_FOLDER}")
 
 # Configurazione CORS
-CORS(app, 
-     origins=CORS_ORIGINS,
-     allow_headers=['Content-Type', 'Authorization'],
-     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
+CORS(app, resources={
+    r"/*": {
+        "origins": CORS_ORIGINS,
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Middleware per gestire le richieste OPTIONS e CORS
 @app.after_request
