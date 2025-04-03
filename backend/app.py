@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
 import pandas as pd
-from backend.config import Config, UPLOAD_FOLDER, MAX_CONTENT_LENGTH, CORS_ORIGINS
+from config import Config, UPLOAD_FOLDER, MAX_CONTENT_LENGTH, CORS_ORIGINS
 import logging
 
 # Configurazione logging
@@ -19,6 +19,14 @@ db = SQLAlchemy(app)
 # Crea la cartella uploads se non esiste
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 logger.info(f"Upload folder created at: {UPLOAD_FOLDER}")
+
+# Crea le tabelle del database
+try:
+    db.create_all()
+    logger.info("Database tables created successfully")
+except Exception as e:
+    logger.error(f"Error creating database tables: {e}")
+    raise
 
 # Configurazione CORS
 CORS(app, resources={
@@ -56,15 +64,6 @@ class Auto(db.Model):
     targa = db.Column(db.String(20), unique=True)
     chilometraggio = db.Column(db.Integer)
     data_importazione = db.Column(db.DateTime, default=datetime.utcnow)
-
-# Crea le tabelle del database
-with app.app_context():
-    try:
-        db.create_all()
-        logger.info("Database tables created successfully")
-    except Exception as e:
-        logger.error(f"Error creating database tables: {e}")
-        raise
 
 # Mapping delle colonne per gestire i diversi nomi possibili
 column_mapping = {
