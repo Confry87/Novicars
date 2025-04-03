@@ -170,70 +170,58 @@ def import_excel():
         df = pd.read_excel(filepath)
         app.logger.info(f"File Excel letto con successo. Colonne trovate: {df.columns.tolist()}")
         
-        # Verifica le colonne richieste
-        required_columns = ['targa', 'marca', 'modello', 'anno', 'prezzo', 'fornitore']
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        if missing_columns:
-            return jsonify({
-                'error': f'Colonne mancanti nel file: {", ".join(missing_columns)}',
-                'columns_found': df.columns.tolist()
-            }), 400
+        # Aggiungi le colonne mancanti con valori predefiniti
+        default_values = {
+            'targa': '',
+            'marca': '',
+            'modello': '',
+            'anno': 0,
+            'prezzo': 0.0,
+            'fornitore': fornitore_forzato if fornitore_forzato else '',
+            'km': 0,
+            'note': ''
+        }
+        
+        for col, default_value in default_values.items():
+            if col not in df.columns:
+                app.logger.info(f"Aggiunta colonna mancante: {col} con valore predefinito: {default_value}")
+                df[col] = default_value
         
         # Converti i tipi di dati
-        df['anno'] = pd.to_numeric(df['anno'], errors='coerce')
-        df['prezzo'] = pd.to_numeric(df['prezzo'], errors='coerce')
+        df['anno'] = pd.to_numeric(df['anno'], errors='coerce').fillna(0).astype(int)
+        df['prezzo'] = pd.to_numeric(df['prezzo'], errors='coerce').fillna(0.0).astype(float)
+        df['km'] = pd.to_numeric(df['km'], errors='coerce').fillna(0).astype(int)
         
-        # Rimuovi le righe con valori nulli nei campi obbligatori
-        df = df.dropna(subset=['targa', 'marca', 'modello', 'anno', 'prezzo'])
-        
-        # Converti NaN in None per i campi opzionali
-        df['km'] = df['km'].where(pd.notnull(df['km']), None)
-        df['note'] = df['note'].where(pd.notnull(df['note']), None)
-        
-        # Imposta il fornitore forzato se specificato
-        if fornitore_forzato:
-            df['fornitore'] = fornitore_forzato
-        
-        # Verifica che non ci siano righe con valori nulli nei campi obbligatori
-        null_rows = df[df.isnull().any(axis=1)]
-        if not null_rows.empty:
-            return jsonify({
-                'error': 'Sono state trovate righe con valori mancanti nei campi obbligatori',
-                'invalid_rows': null_rows.to_dict('records')
-            }), 400
+        # Converti NaN in valori predefiniti
+        df = df.fillna({
+            'targa': '',
+            'marca': '',
+            'modello': '',
+            'anno': 0,
+            'prezzo': 0.0,
+            'fornitore': fornitore_forzato if fornitore_forzato else '',
+            'km': 0,
+            'note': ''
+        })
         
         # Converti il DataFrame in una lista di dizionari
         records = df.to_dict('records')
-        app.logger.info(f"Elaborazione di {len(records)} righe valide")
+        app.logger.info(f"Elaborazione di {len(records)} righe")
         
         # Inserisci i dati nel database
         for i, record in enumerate(records, 1):
             try:
                 app.logger.info(f"Elaborazione riga {i}, targa: {record.get('targa')}")
                 
-                # Verifica che tutti i campi obbligatori siano presenti e validi
-                if not all(record.get(field) is not None for field in ['targa', 'marca', 'modello', 'anno', 'prezzo']):
-                    app.logger.error(f"Riga {i} mancante di campi obbligatori: {record}")
-                    continue
-                
-                # Verifica che anno e prezzo siano numeri validi
-                if not isinstance(record['anno'], (int, float)) or pd.isna(record['anno']):
-                    app.logger.error(f"Riga {i}: anno non valido: {record['anno']}")
-                    continue
-                    
-                if not isinstance(record['prezzo'], (int, float)) or pd.isna(record['prezzo']):
-                    app.logger.error(f"Riga {i}: prezzo non valido: {record['prezzo']}")
-                    continue
-                
                 # Crea l'oggetto Auto con i dati validati
                 auto = Auto(
-                    targa=str(record['targa']).strip(),
+                    targa=str(record['targa']).strip() or f"TEMP_{i}",  # Se la targa è vuota, usa un valore temporaneo
                     marca=str(record['marca']).strip(),
                     modello=str(record['modello']).strip(),
                     anno=int(record['anno']),
                     prezzo=float(record['prezzo']),
-                    km=float(record['km']) if record.get('km') is not None else None,
-                    note=str(record['note']).strip() if record.get('note') is not None else None,
+                    km=float(record['km']) if record.get('km') is not None else 0,
+                    note=str(record['note']).strip() if record.get('note') is not None else '',
                     fornitore=str(record['fornitore']).strip()
                 )
                 
