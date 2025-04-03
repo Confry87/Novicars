@@ -52,18 +52,26 @@ export const apiService = {
             if (fornitoreForzato) {
                 formData.append('fornitore_forzato', fornitoreForzato);
             }
+
             const response = await api.post('/api/import', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                    'Content-Type': 'multipart/form-data',
+                },
             });
-            return response.data;
+
+            return response.data.log;
         } catch (error: any) {
             console.error('Errore durante l\'importazione del file Excel:', error);
             if (error.response?.data?.error) {
                 throw new Error(error.response.data.error);
             }
-            throw new Error('Errore durante l\'importazione del file Excel');
+            if (error.code === 'ECONNABORTED') {
+                throw new Error('La richiesta ha impiegato troppo tempo. Riprova più tardi.');
+            }
+            if (!error.response) {
+                throw new Error('Impossibile connettersi al server. Verifica la tua connessione internet.');
+            }
+            throw new Error('Errore durante l\'importazione del file Excel. Riprova più tardi.');
         }
     },
 
