@@ -23,10 +23,23 @@ class Auto(db.Model):
     modello = db.Column(db.String(100))
     anno = db.Column(db.Integer)
     prezzo = db.Column(db.Float)
-    colore = db.Column(db.String(50))
+    colore = db.Column(db.String(200))
     targa = db.Column(db.String(20), unique=True)
     chilometraggio = db.Column(db.Integer)
     data_importazione = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'fornitore': self.fornitore,
+            'modello': self.modello,
+            'anno': self.anno,
+            'prezzo': self.prezzo,
+            'colore': self.colore,
+            'targa': self.targa,
+            'chilometraggio': self.chilometraggio,
+            'data_importazione': self.data_importazione.isoformat() if self.data_importazione else None
+        }
 
 # Definizione del modello ImportLog
 class ImportLog(db.Model):
@@ -95,9 +108,9 @@ column_mapping = {
     'MODELLO': 'modello',
     'Anno': 'anno',
     'anno': 'anno',
-    'ANNO': 'anno',
+    'Model Year': 'anno',
     'Prezzo': 'prezzo',
-    'prezzo': 'prezzo',
+     'prezzo Veicolo': 'prezzo',
     'PREZZO': 'prezzo',
     'Colore': 'colore',
     'colore': 'colore',
