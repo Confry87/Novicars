@@ -19,8 +19,8 @@ db = SQLAlchemy(app)
 # Definizione del modello Auto
 class Auto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fornitore = db.Column(db.String(100))
-    modello = db.Column(db.String(100))
+    fornitore = db.Column(db.String(200))
+    modello = db.Column(db.String(200))
     anno = db.Column(db.Integer)
     prezzo = db.Column(db.Float)
     colore = db.Column(db.String(200))
