@@ -89,18 +89,27 @@ with app.app_context():
 column_mapping = {
     'Marca': 'fornitore',
     'marca': 'fornitore',
+    'MARCA': 'fornitore',
     'Modello': 'modello',
     'modello': 'modello',
+    'MODELLO': 'modello',
     'Anno': 'anno',
     'anno': 'anno',
+    'ANNO': 'anno',
     'Prezzo': 'prezzo',
     'prezzo': 'prezzo',
+    'PREZZO': 'prezzo',
     'Colore': 'colore',
     'colore': 'colore',
+    'COLORE': 'colore',
     'Targa': 'targa',
     'targa': 'targa',
+    'TARGA': 'targa',
     'Chilometraggio': 'chilometraggio',
-    'chilometraggio': 'chilometraggio'
+    'chilometraggio': 'chilometraggio',
+    'KM': 'chilometraggio',
+    'km': 'chilometraggio',
+    'Km': 'chilometraggio'
 }
 
 # Route per le auto
@@ -170,18 +179,23 @@ def import_excel():
         df = pd.read_excel(filepath)
         app.logger.info(f"File Excel letto con successo. Colonne trovate: {df.columns.tolist()}")
         
-        # Aggiungi le colonne mancanti con valori predefiniti
+        # Rinomina le colonne secondo il mapping
+        df.columns = [column_mapping.get(col, col) for col in df.columns]
+        app.logger.info(f"Colonne dopo il mapping: {df.columns.tolist()}")
+        
+        # Valori predefiniti per le colonne mancanti
         default_values = {
             'targa': '',
-            'marca': '',
+            'fornitore': fornitore_forzato if fornitore_forzato else '',
             'modello': '',
             'anno': 0,
             'prezzo': 0.0,
-            'fornitore': fornitore_forzato if fornitore_forzato else '',
-            'km': 0,
+            'chilometraggio': 0,
+            'colore': '',
             'note': ''
         }
         
+        # Aggiungi le colonne mancanti con valori predefiniti
         for col, default_value in default_values.items():
             if col not in df.columns:
                 app.logger.info(f"Aggiunta colonna mancante: {col} con valore predefinito: {default_value}")
@@ -190,19 +204,10 @@ def import_excel():
         # Converti i tipi di dati
         df['anno'] = pd.to_numeric(df['anno'], errors='coerce').fillna(0).astype(int)
         df['prezzo'] = pd.to_numeric(df['prezzo'], errors='coerce').fillna(0.0).astype(float)
-        df['km'] = pd.to_numeric(df['km'], errors='coerce').fillna(0).astype(int)
+        df['chilometraggio'] = pd.to_numeric(df['chilometraggio'], errors='coerce').fillna(0).astype(int)
         
         # Converti NaN in valori predefiniti
-        df = df.fillna({
-            'targa': '',
-            'marca': '',
-            'modello': '',
-            'anno': 0,
-            'prezzo': 0.0,
-            'fornitore': fornitore_forzato if fornitore_forzato else '',
-            'km': 0,
-            'note': ''
-        })
+        df = df.fillna(default_values)
         
         # Converti il DataFrame in una lista di dizionari
         records = df.to_dict('records')
@@ -215,14 +220,14 @@ def import_excel():
                 
                 # Crea l'oggetto Auto con i dati validati
                 auto = Auto(
-                    targa=str(record['targa']).strip() or f"TEMP_{i}",  # Se la targa è vuota, usa un valore temporaneo
-                    marca=str(record['marca']).strip(),
+                    targa=str(record['targa']).strip() or f"TEMP_{i}",
+                    fornitore=str(record['fornitore']).strip(),
                     modello=str(record['modello']).strip(),
                     anno=int(record['anno']),
                     prezzo=float(record['prezzo']),
-                    km=float(record['km']) if record.get('km') is not None else 0,
-                    note=str(record['note']).strip() if record.get('note') is not None else '',
-                    fornitore=str(record['fornitore']).strip()
+                    chilometraggio=int(record['chilometraggio']),
+                    colore=str(record['colore']).strip() if 'colore' in record else '',
+                    data_importazione=datetime.utcnow()
                 )
                 
                 db.session.add(auto)
