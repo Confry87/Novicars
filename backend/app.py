@@ -196,9 +196,19 @@ def import_excel():
         df.columns = [column_mapping.get(col, col) for col in df.columns]
         app.logger.info(f"Colonne dopo il mapping: {df.columns.tolist()}")
         
+        # Mappa il prezzo dal campo corretto
+        if 'Prezzo Veicolo' in df.columns:
+            df['prezzo'] = df['Prezzo Veicolo']
+        elif 'prezzo "Chiavi In Mano"' in df.columns:
+            df['prezzo'] = df['prezzo "Chiavi In Mano"']
+        
+        # Mappa il chilometraggio
+        if 'Km (vei. AZ.)' in df.columns:
+            df['chilometraggio'] = df['Km (vei. AZ.)']
+        
         # Valori predefiniti per le colonne mancanti
         default_values = {
-            'targa': '',
+            'targa': '0000',
             'fornitore': fornitore_forzato if fornitore_forzato else '',
             'modello': '',
             'anno': 0,
@@ -233,7 +243,7 @@ def import_excel():
                 
                 # Crea l'oggetto Auto con i dati validati
                 auto = Auto(
-                    targa=str(record['targa']).strip() or f"TEMP_{i}",
+                    targa=str(record['targa']).strip() or '0000',
                     fornitore=str(record['fornitore']).strip(),
                     modello=str(record['modello']).strip(),
                     anno=int(record['anno']),
@@ -371,13 +381,14 @@ def index():
 @app.route('/api/clear-database', methods=['POST'])
 def clear_database():
     try:
+        num_records = Auto.query.count()
         # Elimina tutti i record dalla tabella Auto
         Auto.query.delete()
         db.session.commit()
         
         return jsonify({
             'message': 'Database pulito con successo',
-            'records_deleted': Auto.query.count()
+            'records_deleted': num_records
         })
     except Exception as e:
         db.session.rollback()
